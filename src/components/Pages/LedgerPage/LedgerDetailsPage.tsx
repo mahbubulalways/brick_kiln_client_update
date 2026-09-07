@@ -19,6 +19,7 @@ import { TQuery } from "@/interface/query";
 import { TMetaConfig } from "@/interface/meta";
 import { TablePagination } from "@/components/Reusable/TablePagination";
 import { useRouter } from "next/navigation";
+import renderImage from "@/utils/renderImage";
 
 const LedgerDetailsPage = ({ id, params }: { id: string, params: TQuery }) => {
     const [dateRange, setDateRange] = useState("");
@@ -329,7 +330,7 @@ const LedgerDetailsPage = ({ id, params }: { id: string, params: TQuery }) => {
                                     >
                                         {
                                             row?.document ? <Link
-                                                href={`http://localhost:5000/uploads/${row?.document}`}
+                                                href={renderImage(row?.document)}
                                                 target="_blank"
                                             >
                                                 <IoDocumentTextOutline size={18} />

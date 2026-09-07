@@ -149,8 +149,6 @@ export default function SmsSettings() {
 
                     {isGetting ? (
                         <CustomLoader cls="h-[40vh]" />
-                    ) : isGetError ? (
-                        <CustomStatus type="error" />
                     ) : (
                         <form onSubmit={handleSubmit(onSubmit)}>
                             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
