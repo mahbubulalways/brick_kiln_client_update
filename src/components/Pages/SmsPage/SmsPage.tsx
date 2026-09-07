@@ -64,7 +64,7 @@ export default function SmsPage() {
 
                                         <div className="mt-3 flex items-end gap-2">
                                             <span className="text-4xl font-bold">
-                                                {toBanglaNumber(currentSmsInfo?.totalPurchased - currentSmsInfo.totalUsed)}
+                                                {toBanglaNumber(currentSmsInfo?.totalPurchased - currentSmsInfo?.totalUsed || 0)}
                                             </span>
 
                                             <span className="mb-1 text-sm text-white/75">
@@ -85,7 +85,7 @@ export default function SmsPage() {
                                     <span>
                                         প্রতি এসএমএস রেট:{" "}
                                         <span className="font-semibold text-white">
-                                            ৳{toBanglaNumber(currentSmsInfo.currentRate)}
+                                            ৳{toBanglaNumber(currentSmsInfo?.currentRate || smsInfo?.ratePerSms || 0)}
                                         </span>
                                     </span>
                                 </div>
@@ -101,7 +101,7 @@ export default function SmsPage() {
                                         </p>
 
                                         <p className="mt-2 text-2xl font-bold text-gray-900">
-                                            {toBanglaNumber(currentSmsInfo.totalUsed)}
+                                            {toBanglaNumber(currentSmsInfo?.totalUsed || 0)}
                                         </p>
 
                                         <p className="mt-1 text-xs text-gray-400">
