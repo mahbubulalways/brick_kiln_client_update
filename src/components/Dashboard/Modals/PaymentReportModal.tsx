@@ -37,7 +37,7 @@ const PaymentReportModal = ({
   const [todayDate] = useState(new Date());
   const date =
     activeTab === "date" ?
-      formatDateRange(String(todayDate))
+      formatDateRange({ start: todayDate, end: null })
       : undefined;
   const {
     data,
