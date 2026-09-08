@@ -35,6 +35,7 @@ import NewDueCollectionModalId from "@/components/Dashboard/Modals/NewDueCollect
 import { formatDateRange } from "@/utils/formatDateRange";
 import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
 import CustomStatus from "@/components/Reusable/CustomStatus";
+import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
 
 
 
@@ -46,11 +47,25 @@ const DueCollectionPage = ({ limit, page }: TQuery) => {
     useState<boolean>(false);
   const [isOpenUpdateModal, setOpenUpdateModal] = useState<boolean>(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
-  const [date, setDate] = useState<Date | undefined>(new Date());
   const [customerId, setCustomerId] = useState<string>();
   const [deuId, setDeuId] = useState<string>();
-  const isoDate = formatDateRange(String(date));
-  const { data, isLoading, isError } = useGetTodayPaidQuery({ date: isoDate, limit, page }, {
+
+  const [filterDate, setDateFiter] = useState<{
+    startDate: Date | null,
+    endDate: Date | null,
+  }>({
+    startDate: new Date(),
+    endDate: null,
+  });
+
+  const formatDate = formatDateRange({
+    start: filterDate.startDate,
+    end: filterDate.endDate
+  })
+
+  const { data, isLoading, isError } = useGetTodayPaidQuery({
+    date: formatDate, limit, page
+  }, {
     refetchOnMountOrArgChange: true,
   });
   const printRef = useRef<TCommonPrintRef>(null);
@@ -73,22 +88,33 @@ const DueCollectionPage = ({ limit, page }: TQuery) => {
         <span className="bg-green-100 text-center text-green-800 px-3 rounded text-sm border border-green-300 font-medium lg:hidden block">
           মোট জমাঃ: {totalCredit?.toLocaleString()} টাকা
         </span>
-        <div className="flex justify-between items-center pt-2 lg:pt-0 gap-5">
-          <div className="flex items-center gap-2 w-auto lg:w-full">
-
-            <CustomNewButton title="নতুন বাকি জমা"
+        <div className="flex flex-col gap-3 pt-2 lg:flex-row lg:items-center lg:justify-between lg:gap-5 lg:pt-0">
+          {/* Left Section */}
+          <div className="flex w-full items-center justify-between gap-2 lg:w-auto lg:justify-start">
+            <CustomNewButton
+              title="নতুন বাকি জমা"
               onClick={() => setIsOpen(true)}
             />
 
-            <span className="bg-green-100 text-green-800 px-3 py-1 rounded text-sm border border-green-300 font-medium hidden lg:block">
-              মোট জমাঃ: {totalCredit?.toLocaleString()} টাকা
+            <span className="rounded border border-green-300 bg-green-100 px-3 py-1 text-sm font-medium text-green-800 lg:block">
+              মোট জমাঃ {totalCredit?.toLocaleString()} টাকা
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <CustomDatePickerState onChange={setDate} value={date} />
+          {/* Right Section */}
+          <div className="flex w-full items-center gap-2 lg:w-auto">
+            <div className="min-w-0 flex-1 lg:flex-none">
+              <CustomDateFilter
+                value={filterDate}
+                onChange={setDateFiter}
+                placeholder="তারিখ ফিল্টার করুন"
+                className="w-full lg:w-auto"
+              />
+            </div>
+
             <CustomPrintButton
               onClick={() => printRef.current?.print()}
+              className="w-max shrink-0"
             />
           </div>
         </div>

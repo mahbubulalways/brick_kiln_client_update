@@ -37,12 +37,22 @@ import CommonPrint, { TCommonPrintRef } from "@/components/Reusable/CommonPrint"
 import UnloadPagePrint from "./UploadPagePrint";
 import UnloadReportModal from "@/components/Dashboard/Modals/ReportModal/UnloadReportModal";
 import { useGetVataInfoQuery } from "@/redux/features/vata.features";
+import { formatDateRange } from "@/utils/formatDateRange";
+import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
 
 const UnloadPage = ({ limit, page }: TQuery) => {
-    const [date, setDate] = useState<Date | undefined>();
+
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [openReportModal, setOpenReOpenModal] = useState<boolean>(false);
     const [selected, setSelected] = useState("");
+    const [filterDate, setDateFiter] = useState<{
+        startDate: Date | null,
+        endDate: Date | null,
+    }>({
+        startDate: new Date(),
+        endDate: null,
+    });
+
     const printRef = useRef<TCommonPrintRef>(null);
     const {
         data: vataInfo,
@@ -51,14 +61,17 @@ const UnloadPage = ({ limit, page }: TQuery) => {
     // =========================
     // GET UNLOAD DATA
     // =========================
-
+    const formatDate = formatDateRange({
+        start: filterDate.startDate,
+        end: filterDate.endDate
+    })
     const {
         isError,
         data,
         isLoading,
     } = useGetAllUnloadInfoQuery(
         {
-            date: String(date),
+            date: formatDate,
             search: selected,
             limit,
             page,
@@ -171,89 +184,60 @@ const UnloadPage = ({ limit, page }: TQuery) => {
     return (
         <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm">
 
-            <div className="hidden md:block w-full">
-                <div className="flex justify-between items-center pt-2 lg:pt-0 gap-5">
-                    {/* Left */}
-                    <div className="shrink-0">
+            <div className="w-full p-2">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-5">
+                    {/* New Unload */}
+                    <div className="w-full shrink-0 lg:w-auto">
                         <CustomNewButton
                             onClick={() => setIsModalOpen(true)}
                             title="নতুন আনলোড"
+                            className="w-full lg:w-auto"
                         />
                     </div>
 
-                    {/* Right */}
-                    <div className="flex items-center justify-end gap-2">
-                        <div className="w-[160px]">
-                            <CustomDatePickerState
-                                onChange={setDate}
-                                value={date}
-                                placeholder="তারিখ"
-                                height="8"
-                            />
+                    {/* Right Section */}
+                    <div className="flex w-full flex-col gap-2 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
+                        {/* Date + Round */}
+                        <div className="flex w-full items-center gap-2 lg:w-auto">
+                            <div className="min-w-0 flex-1 lg:w-auto lg:flex-none">
+                                <CustomDateFilter
+                                    value={filterDate}
+                                    onChange={setDateFiter}
+                                    placeholder="তারিখ ফিল্টার করুন"
+                                    className="w-full lg:w-auto"
+                                />
+                            </div>
+
+                            <div className="min-w-0 flex-1 lg:w-[160px] lg:flex-none">
+                                <CustomSelect2
+                                    options={formatRound || []}
+                                    placeholder="রাউন্ড"
+                                    onChange={(value) => setSelected(value)}
+                                    isError={roundError}
+                                    isLoading={roundLoading}
+                                />
+                            </div>
                         </div>
 
-                        <div className="w-[160px]">
-                            <CustomSelect2
-                                options={formatRound || []}
-                                placeholder="রাউন্ড"
-                                onChange={(value) => setSelected(value)}
-                                isError={roundError}
-                                isLoading={roundLoading}
-                            />
-                        </div>
+                        {/* Print + Report */}
+                        <div className="grid w-full grid-cols-2 gap-2 lg:flex lg:w-auto lg:items-center">
+                            <div className="w-full lg:w-auto">
+                                <CustomPrintButton
+                                    className="w-full lg:w-auto"
+                                    onClick={() => printRef.current?.print()}
+                                />
+                            </div>
 
-                        <div className="shrink-0">
-                            <CustomPrintButton
-                                onClick={() => printRef.current?.print()}
-                            />
-                        </div>
-
-                        <div className="shrink-0">
-                            <CustomReportButton
-                                onClick={() => setOpenReOpenModal(true)}
-                            />
+                            <div className="w-full lg:w-auto">
+                                <CustomReportButton
+                                    className="w-full lg:w-auto"
+                                    onClick={() => setOpenReOpenModal(true)}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div className="block md:hidden">
-                <div className="flex justify-between items-center pt-2 lg:pt-0 gap-2">
-                    <CustomNewButton
-                        onClick={() =>
-                            setIsModalOpen(true)
-                        }
-                        title="নতুন আনলোড"
-                        className="w-full"
-                    />
-                    <CustomPrintButton onClick={() => printRef.current?.print()} />
-                    <CustomReportButton
-                        className="w-full"
-                        onClick={() => setOpenReOpenModal(true)}
-                    />
-
-                </div>
-                <div className="flex items-center gap-2 pt-2">
-                    <div className="flex-1">
-                        <CustomDatePickerState
-                            onChange={setDate}
-                            value={date}
-                            placeholder="তারিখ"
-                            height="8"
-                        />
-                    </div>
-
-                    <div className="flex-1">
-                        <CustomSelect2
-                            options={formatRound || []}
-                            placeholder="রাউন্ড"
-                            onChange={(value) => setSelected(value)}
-                            isError={roundError}
-                            isLoading={roundLoading}
-                        />
-                    </div>
-                </div>
-            </div>
-
             {/* ================= TABLE ================= */}
             <div className="overflow-x-auto mt-4">
 
@@ -543,7 +527,7 @@ const UnloadPage = ({ limit, page }: TQuery) => {
             >
                 <UnloadPagePrint
                     unloadData={unloads}
-                    date={date}
+                    date={new Date()}
                     classes={filtered}
                     vataInfo={vataInfo?.data}
                 />

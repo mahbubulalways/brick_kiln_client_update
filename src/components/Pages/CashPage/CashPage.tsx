@@ -34,6 +34,7 @@ import CashReportModal from "@/components/Dashboard/Modals/ReportModal/CashRepor
 import { formatDateRange } from "@/utils/formatDateRange";
 import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
 import CustomStatus from "@/components/Reusable/CustomStatus";
+import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
 
 const CashPage = ({ limit, page, search }: TQuery) => {
   const [searchItem, setSearchItem] = useState("");
@@ -42,7 +43,17 @@ const CashPage = ({ limit, page, search }: TQuery) => {
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
   const [openCashModal, setOpenCashModal] = useState(false);
   const [cashId, setCashId] = useState<number | undefined>(undefined);
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [filterDate, setDateFiter] = useState<{
+    startDate: Date | null,
+    endDate: Date | null,
+  }>({
+    startDate: new Date(),
+    endDate: null,
+  });
+  const formatDate = formatDateRange({
+    start: filterDate.startDate,
+    end: filterDate.endDate
+  })
   const {
     data: cashResponse,
     isLoading,
@@ -51,7 +62,7 @@ const CashPage = ({ limit, page, search }: TQuery) => {
     page,
     limit,
     search: search || undefined,
-    date: formatDateRange(String(date)),
+    date: formatDate,
   });
   const [deleteCash, { isLoading: isDeleting }] =
     useDeleteCashMutation();
@@ -116,67 +127,63 @@ const CashPage = ({ limit, page, search }: TQuery) => {
   return (
     <div className="bg-white rounded-md shadow border ">
 
-      <div className="hidden p-2  md:block">
-        <div className="flex items-center gap-3 justify-between pt-3 lg:pt-0">
-          <CustomNewButton title="নতুন হিসাব" onClick={() => setIsModalOpen(true)} />
-          <div className="flex items-center gap-3 w-full lg:w-auto">
-            {/* Total */}
-            <div className="hidden lg:flex items-center gap-2">
-              <span className="text-green-500 px-3 text-[15px] text-nowrap py-1 rounded border border-green-300 font-medium">
-                আজকের ক্যাশঃ {toBanglaNumber(totalIncome.toLocaleString())} টাকা
-              </span>
-
-              <span className="text-orange-500 px-3 text-[15px] text-nowrap py-1 rounded border border-orange-300 font-medium">
-                ক্যাশ জেরঃ {toBanglaNumber(totalExpense.toLocaleString())} টাকা
-              </span>
-            </div>
-
-            <SearchBar value={searchItem} onChange={(e) => setSearchItem(e.target.value)} />
-
-            {/* Date */}
-            <div className="w-full lg:w-auto">
-              <CustomDatePickerState value={date} onChange={setDate} height="8" />
-            </div>
-            <CustomPrintButton
-              onClick={() => printRef.current?.print()}
-            />
-            <CustomReportButton
-              onClick={() => setOpenCashModal(true)}
-            />
-          </div>
-        </div>
-      </div>
-
-
-      <div className="p-2 md:hidden block">
-        <div className="flex w-full items-center gap-3 ">
-          <div className="min-w-0 flex-1">
+      <div className="p-2">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-5">
+          {/* New Button */}
+          <div className="w-full lg:w-auto">
             <CustomNewButton
               title="নতুন হিসাব"
-              className="w-full"
+              className="w-full lg:w-auto text-nowrap"
               onClick={() => setIsModalOpen(true)}
             />
           </div>
 
-          <div className="min-w-0 flex-1">
-            <CustomPrintButton
-              className="w-full"
-              onClick={() => printRef.current?.print()}
-            />
-          </div>
+          {/* Right Section */}
+          <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-end">
+            {/* Total */}
+            <div className="hidden items-center gap-2 lg:flex">
+              <span className="text-nowrap rounded border border-green-300 px-3 py-1 text-[15px] font-medium text-green-500">
+                আজকের ক্যাশঃ{" "}
+                {toBanglaNumber(totalIncome.toLocaleString())} টাকা
+              </span>
 
-          <div className="min-w-0 flex-1">
-            <CustomReportButton className="w-full"
-              onClick={() => setOpenCashModal(true)}
-            />
-          </div>
-        </div>
-        <div className="flex items-center gap-2 pt-3">
-          <SearchBar value={searchItem} onChange={(e) => setSearchItem(e.target.value)} />
+              <span className="text-nowrap rounded border border-orange-300 px-3 py-1 text-[15px] font-medium text-orange-500">
+                ক্যাশ জেরঃ{" "}
+                {toBanglaNumber(totalExpense.toLocaleString())} টাকা
+              </span>
+            </div>
 
-          {/* Date */}
-          <div className="w-full lg:w-auto">
-            <CustomDatePickerState value={date} onChange={setDate} height="8" />
+            {/* Search + Date */}
+            <div className="flex w-full items-center gap-2 lg:w-auto">
+              <div className="min-w-0 flex-1 lg:w-[220px] lg:flex-none">
+                <SearchBar
+                  value={searchItem}
+                  onChange={(e) => setSearchItem(e.target.value)}
+                />
+              </div>
+
+              <div className="min-w-0 flex-1 lg:w-auto lg:flex-none">
+                <CustomDateFilter
+                  value={filterDate}
+                  onChange={setDateFiter}
+                  placeholder="তারিখ ফিল্টার করুন"
+                  className="w-full lg:w-auto"
+                />
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:flex lg:w-auto lg:items-center">
+              <CustomPrintButton
+                className="w-full lg:w-auto"
+                onClick={() => printRef.current?.print()}
+              />
+
+              <CustomReportButton
+                className="w-full lg:w-auto"
+                onClick={() => setOpenCashModal(true)}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -288,7 +295,7 @@ const CashPage = ({ limit, page, search }: TQuery) => {
       >
         <CashPagePrint
           cashData={cashData}
-          date={date}
+          date={new Date()}
           vataInfo={vataInfo?.data}
         />
       </CommonPrint>
@@ -309,7 +316,7 @@ const CashPage = ({ limit, page, search }: TQuery) => {
         <CashReportModal
           isOpen={openCashModal}
           onClose={() => setOpenCashModal(false)}
-          date={date?.toISOString()!}
+          date={formatDate}
         />
       }
     </div>

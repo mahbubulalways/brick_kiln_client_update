@@ -37,6 +37,7 @@ import PaymentPrint from "@/components/PrintComponent/PaymentPrint";
 import { useGetVataInfoQuery } from "@/redux/features/vata.features";
 import { formatDateRange } from "@/utils/formatDateRange";
 import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
+import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
 
 const PaymentPage = ({ limit, page, search }: TQuery) => {
   const [searchItems, setSearchItem] = useState("");
@@ -45,13 +46,23 @@ const PaymentPage = ({ limit, page, search }: TQuery) => {
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
   const [selectedPaymentId, setSelectedPaymentId] = useState<number | null>(null);
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [filterDate, setDateFiter] = useState<{
+    startDate: Date | null,
+    endDate: Date | null,
+  }>({
+    startDate: new Date(),
+    endDate: null,
+  });
+  const formatDate = formatDateRange({
+    start: filterDate.startDate,
+    end: filterDate.endDate
+  })
   const { data, isError, isLoading, isFetching } = useGetPaymentQuery(
     {
       limit,
       page,
       search,
-      date: formatDateRange(String(date))
+      date: formatDate
     },
     {
       refetchOnMountOrArgChange: true,
@@ -136,17 +147,19 @@ const PaymentPage = ({ limit, page, search }: TQuery) => {
             </span>
           </div>
 
-          <div className="grid w-full md:w-max grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end">
-            <div className="">
-              <CustomDatePickerState
-                onChange={setDate}
-                value={date}
-                placeholder="তারিখ"
-                height="8"
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-full sm:items-center sm:justify-end">
+            {/* Date Filter */}
+            <div className="min-w-0 sm:w-auto">
+              <CustomDateFilter
+                value={filterDate}
+                onChange={setDateFiter}
+                placeholder="তারিখ ফিল্টার করুন"
+                className="w-full sm:w-auto"
               />
             </div>
 
-            <div className="min-w-0 sm:flex-1 lg:flex-none">
+            {/* Search */}
+            <div className="col-span-2 min-w-0 sm:min-w-0 sm:flex-1 lg:flex-none">
               <SearchBar
                 value={searchItems}
                 onChange={(e) => setSearchItem(e.target.value)}
@@ -154,13 +167,19 @@ const PaymentPage = ({ limit, page, search }: TQuery) => {
               />
             </div>
 
-            <CustomPrintButton
-              onClick={() => printRef.current?.print()}
-            />
+            {/* Print */}
+            <div className="min-w-0">
+              <CustomPrintButton
+                onClick={() => printRef.current?.print()}
+              />
+            </div>
 
-            <CustomReportButton
-              onClick={() => setReportModalOpen(true)}
-            />
+            {/* Report */}
+            <div className="min-w-0">
+              <CustomReportButton
+                onClick={() => setReportModalOpen(true)}
+              />
+            </div>
           </div>
         </div>
       </div>

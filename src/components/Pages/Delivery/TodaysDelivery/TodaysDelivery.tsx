@@ -38,15 +38,29 @@ import CustomPrintButton from "@/components/Reusable/CustomPrintButton";
 import { formatDateRange } from "@/utils/formatDateRange";
 import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
 import CustomStatus from "@/components/Reusable/CustomStatus";
+import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
 const TodaysDeliveryPage = ({ limit, page, }: TQuery) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [date, setDate] = useState<Date | undefined>(new Date());
   const [openDeliveryReport, setOpenDeliveryReport] = useState<boolean>(false);
   const [openDeliveryDetailsModal, setOpenDeliveryDetailsModal] = useState<boolean>(false);
   const [openPrintModal, setOpenPrintModal] = useState<boolean>(false);
   const [deliveryId, setDeliveryId] = useState<number | undefined>();
-  const isoDate = formatDateRange(String(date));
-  const { data, isFetching, isError } = useGetTodaysDeliveryQuery({ date: isoDate, limit, page }, {
+  const [filterDate, setDateFiter] = useState<{
+    startDate: Date | null,
+    endDate: Date | null,
+  }>({
+    startDate: new Date(),
+    endDate: null,
+  });
+
+  const formatDate = formatDateRange({
+    start: filterDate.startDate,
+    end: filterDate.endDate
+  })
+
+  const { data, isFetching, isError } = useGetTodaysDeliveryQuery({
+    date: formatDate, limit, page
+  }, {
     refetchOnMountOrArgChange: true,
   });
 
@@ -71,7 +85,12 @@ const TodaysDeliveryPage = ({ limit, page, }: TQuery) => {
       <div className="flex justify-between items-center p-2  gap-5">
         <CustomNewButton title="নতুন ডেলিভারি" onClick={() => setIsOpen(!isOpen)} />
         <div className="flex items-center gap-2 ">
-          <CustomDatePickerState onChange={setDate} value={date} />
+          <CustomDateFilter
+            value={filterDate}
+            onChange={setDateFiter}
+            placeholder="তারিখ ফিল্টার করুন"
+            className=""
+          />
           <CustomPrintButton
             onClick={() => printRef.current?.print()}
           />

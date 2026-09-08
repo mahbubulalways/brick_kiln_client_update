@@ -1,35 +1,42 @@
-export const formatDateRange = (dateRange?: string) => {
-    if (!dateRange) {
-        return "";
+export const formatDateRange = ({
+  start,
+  end,
+}: {
+  start: Date | null;
+  end: Date | null;
+}) => {
+  const dateRange = `${String(start)}_${String(end)}`;
+  if (!dateRange) {
+    return "";
+  }
+
+  const [startDate, endDate] = dateRange.split("_");
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
     }
 
-    const [startDate, endDate] = dateRange.split("_");
+    return [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      String(date.getDate()).padStart(2, "0"),
+    ].join("-");
+  };
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
+  const result = formatDate(startDate);
 
-        if (Number.isNaN(date.getTime())) {
-            return "";
-        }
+  if (!result) {
+    return "";
+  }
 
-        return [
-            date.getFullYear(),
-            String(date.getMonth() + 1).padStart(2, "0"),
-            String(date.getDate()).padStart(2, "0"),
-        ].join("-");
-    };
+  if (endDate) {
+    const end = formatDate(endDate);
 
-    const start = formatDate(startDate);
+    return end ? `${result}_${end}` : result;
+  }
 
-    if (!start) {
-        return "";
-    }
-
-    if (endDate) {
-        const end = formatDate(endDate);
-
-        return end ? `${start}_${end}` : start;
-    }
-
-    return start;
+  return result;
 };

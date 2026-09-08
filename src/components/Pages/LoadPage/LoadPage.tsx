@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 
 import CustomNewButton from "@/components/Reusable/CustomNewButton";
-import { DatePicker } from "@/components/Others/DatePicker";
 import CustomReportButton from "@/components/Reusable/CustomReportButton";
 import CustomSelect2 from "@/components/Reusable/CustomSelect2";
 import TableData from "@/components/Reusable/TableData";
@@ -24,13 +23,10 @@ import NewLoadModal from "@/components/Dashboard/Modals/NewLoadModal";
 
 import { useDeleteLoadInfoMutation, useGetAllLoadInfoQuery } from "@/redux/features/load.features";
 import { TLoadResponse } from "@/interface/load";
-import CustomLoader from "@/components/Reusable/CustomLoader";
 import { SERVER_ERROR_MESSAGE } from "@/constant";
 import { TMetaConfig } from "@/interface/meta";
 import { TablePagination } from "@/components/Reusable/TablePagination";
 import { TQuery } from "@/interface/query";
-import CustomDatePickerState from "@/components/Reusable/CustomDatePickerState";
-import SearchBar from "@/components/Reusable/SearchBar";
 import CustomPrintButton from "@/components/Reusable/CustomPrintButton";
 import { useGetAllRoundQuery } from "@/redux/features/round.features";
 import CommonPrint, { TCommonPrintRef } from "@/components/Reusable/CommonPrint";
@@ -43,6 +39,7 @@ import { formatDateRange } from "@/utils/formatDateRange";
 import { getMovementTypeBangla } from "@/utils/getLoadTypeBangla";
 import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
 import CustomStatus from "@/components/Reusable/CustomStatus";
+import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
 
 const LoadPage = ({ limit, page }: TQuery) => {
   const [date, setDate] = useState<Date | undefined>();
@@ -51,19 +48,29 @@ const LoadPage = ({ limit, page }: TQuery) => {
   const [openUpdateModal, setUpdateOpenModal] = useState<boolean>(false);
   const [loadId, setLoadId] = useState<string | undefined>(undefined)
   const printRef = useRef<TCommonPrintRef>(null);
+  const [filterDate, setDateFiter] = useState<{
+    startDate: Date | null,
+    endDate: Date | null,
+  }>({
+    startDate: new Date(),
+    endDate: null,
+  });
+  const formatDate = formatDateRange({
+    start: filterDate.startDate,
+    end: filterDate.endDate
+  })
   const {
     isError,
     data,
     isLoading,
   } = useGetAllLoadInfoQuery(
-    { date: formatDateRange(String(date)), search: selected, limit, page },
+    { date: formatDate, search: selected, limit, page },
     { refetchOnMountOrArgChange: true }
   );
 
   const {
     data: vataInfo,
   } = useGetVataInfoQuery(undefined);
-
   const [deleteLoadInfo, { isLoading: deleteLoading }] =
     useDeleteLoadInfoMutation();
   const loads: TLoadResponse[] = data?.data?.data ?? [];
@@ -114,60 +121,53 @@ const LoadPage = ({ limit, page }: TQuery) => {
   return (
     <div className="bg-white rounded-md shadow border">
       {/* Header */}
-      <div className="hidden md:block p-2">
-        <div className="flex justify-between items-center pt-2 lg:pt-0 gap-5">
-          <CustomNewButton title="নতুন লোড" onClick={() => setIsModalOpen(true)} />
-          <div className="flex items-center justify-end gap-2">
-            <CustomDatePickerState
-              onChange={setDate}
-              value={date}
-              placeholder="তারিখ"
-              height="8"
+      <div className="p-2">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-5">
+          {/* New Load */}
+          <div className="w-full lg:w-auto">
+            <CustomNewButton
+              title="নতুন লোড"
+              className="w-full lg:w-auto"
+              onClick={() => setIsModalOpen(true)}
             />
-            <CustomSelect2
-              options={format || []}
-              placeholder="1 নম্বর রাউন্ড"
-              onChange={(value) => setSelected(value)}
-              isError={roundError}
-              isLoading={roundLoading}
+          </div>
 
-            />
-            <CustomPrintButton onClick={() => printRef.current?.print()} />
-            <CustomReportButton />
+          {/* Right Section */}
+          <div className="flex w-full flex-col gap-3 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
+            {/* Date + Round */}
+            <div className="flex w-full items-center gap-2 lg:w-auto">
+              <div className="min-w-0 flex-1 lg:w-auto lg:flex-none">
+                <CustomDateFilter
+                  value={filterDate}
+                  onChange={setDateFiter}
+                  placeholder="তারিখ ফিল্টার করুন"
+                  className="w-full lg:w-auto"
+                />
+              </div>
+
+              <div className="min-w-0 flex-1 lg:w-auto lg:flex-none">
+                <CustomSelect2
+                  options={format || []}
+                  placeholder="1 নম্বর রাউন্ড"
+                  onChange={(value) => setSelected(value)}
+                  isError={roundError}
+                  isLoading={roundLoading}
+                />
+              </div>
+            </div>
+
+            {/* Print + Report */}
+            <div className="grid w-full grid-cols-2 gap-2 lg:flex lg:w-auto lg:items-center">
+              <CustomPrintButton
+                className="w-full lg:w-auto"
+                onClick={() => printRef.current?.print()}
+              />
+
+              <CustomReportButton className="w-full lg:w-auto" />
+            </div>
           </div>
         </div>
       </div>
-
-
-      <div className="block md:hidden p-2">
-        <div className="flex justify-between items-center pt-2 lg:pt-0 gap-2">
-          <CustomNewButton title="নতুন লোড" className="w-full" onClick={() => setIsModalOpen(true)} />
-          <CustomPrintButton onClick={() => printRef.current?.print()} />
-          <CustomReportButton className="w-full" />
-
-        </div>
-        <div className="flex items-center gap-2 w-full pt-3">
-          <div className="flex-1 min-w-0">
-            <CustomDatePickerState
-              onChange={setDate}
-              value={date}
-              placeholder="তারিখ"
-              height="8"
-            />
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <CustomSelect2
-              options={format || []}
-              placeholder="1 নম্বর রাউন্ড"
-              onChange={(value) => setSelected(value)}
-              isError={roundError}
-              isLoading={roundLoading}
-            />
-          </div>
-        </div>
-      </div>
-
       <div >
         <div className="overflow-x-auto mt-2  ">
           <table className="min-w-full border-collapse ">
@@ -285,7 +285,7 @@ const LoadPage = ({ limit, page }: TQuery) => {
       >
         <LoadPagePrint
           loadData={loads}
-          date={date}
+          date={new Date()}
           vataInfo={vataInfo?.data}
         />
       </CommonPrint>

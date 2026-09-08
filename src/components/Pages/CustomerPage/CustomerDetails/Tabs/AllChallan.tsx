@@ -47,16 +47,14 @@ import {
 
 interface AllChallanProps {
     customerId: number;
-    startDate: string;
-    endDate: string;
+    formatDate: string,
     query: TQuery;
     setInvoiceInfo: Dispatch<SetStateAction<any>>;
 }
 
 const AllChallan = ({
     customerId,
-    startDate,
-    endDate,
+    formatDate,
     query,
     setInvoiceInfo,
 }: AllChallanProps) => {
@@ -79,8 +77,7 @@ const AllChallan = ({
     } = useGetSingleCustomerInvoiceQuery(
         {
             customerId,
-            startDate,
-            endDate,
+            formatDate,
             query,
         },
         {
@@ -311,8 +308,8 @@ const AllChallan = ({
                                                             cls={`hidden lg:table-cell ${Number(
                                                                 row?.due ?? 0
                                                             ) > 0
-                                                                    ? "text-red-500"
-                                                                    : "text-green-600"
+                                                                ? "text-red-500"
+                                                                : "text-green-600"
                                                                 }`}
                                                             rowSpan={
                                                                 items.length

@@ -53,10 +53,18 @@ import { formatDateRange } from "@/utils/formatDateRange";
 import { toBanglaNumber } from "@/utils/toBanglaNumber";
 import CustomStatus from "@/components/Reusable/CustomStatus";
 import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
+import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
 
 const TodaysInVoicePage = ({ limit, page, search }: TQuery) => {
   const [searchItems, setSearchItem] = useState("");
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [filterDate, setDateFiter] = useState<{
+    startDate: Date | null,
+    endDate: Date | null,
+  }>({
+    startDate: new Date(),
+    endDate: null,
+  });
+
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [openReportModal, setOpenReportModal] = useState<boolean>(false);
   const [isDeliveryModalOpen, setIsDeliveryModalOpen] =
@@ -74,7 +82,12 @@ const TodaysInVoicePage = ({ limit, page, search }: TQuery) => {
   // VATA INFORMATIONS
   const { data: vata } = useGetVataInfoQuery(undefined)
   // FETCH ALL INVOICES
-  const formatDate = formatDateRange(String(date))
+
+  const formatDate = formatDateRange({
+    start: filterDate.startDate,
+    end: filterDate.endDate
+  })
+
   const { isFetching: fetchInvoiceLoading, data: invoices } =
     useGetAllInvoicesQuery(
       { limit, page, search, date: formatDate }
@@ -170,12 +183,12 @@ const TodaysInVoicePage = ({ limit, page, search }: TQuery) => {
         </div>
 
         <div className="flex w-full items-center gap-2 md:w-auto">
-
           <div className="flex-1 md:flex-none">
-            <CustomDatePickerState
-              value={date}
-              onChange={setDate}
-              height="h-8 lg:h-10"
+            <CustomDateFilter
+              value={filterDate}
+              onChange={setDateFiter}
+              placeholder="তারিখ ফিল্টার করুন"
+              className=""
             />
           </div>
 
@@ -621,14 +634,16 @@ const TodaysInVoicePage = ({ limit, page, search }: TQuery) => {
       {isOpen && (
         <NewChalanModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
       )}
+
       {openReportModal && (
         <SellingModal
           isOpen={openReportModal}
           onClose={() => setOpenReportModal(false)}
-          date={date ? date.toISOString() : ""}
+          date={String(filterDate.startDate)}
           challanType="DAILY"
         />
       )}
+
       {openUpdateModal && (
         <UpdateChalanModal
           isOpen={openUpdateModal}

@@ -31,6 +31,7 @@ import { toBanglaNumber } from "@/utils/toBanglaNumber";
 import { formatDateRange } from "@/utils/formatDateRange";
 import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
 import CustomStatus from "@/components/Reusable/CustomStatus";
+import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
 
 export interface IGetAllDueList {
   id: string;
@@ -59,8 +60,19 @@ const AllDueListPage = ({ limit, page, search }: TQuery) => {
   const [openDueModal, setOpenDueModal] = useState<boolean>(false);
   const [openPrintModal, setOpenPrintModal] = useState<boolean>(false);
   const [openDueCollectionModal, setOpenDueCollectionModal] = useState<boolean>(false);
+  const [filterDate, setDateFiter] = useState<{
+    startDate: Date | null,
+    endDate: Date | null,
+  }>({
+    startDate: null,
+    endDate: null,
+  });
+  const formatDate = formatDateRange({
+    start: filterDate.startDate,
+    end: filterDate.endDate
+  })
   const { data, isLoading, isError } = useGetAllDueListQuery({
-    date: formatDateRange(dateRange), limit, page, search
+    date: formatDate, limit, page, search
   }, {
     refetchOnMountOrArgChange: true,
   });
@@ -110,9 +122,11 @@ const AllDueListPage = ({ limit, page, search }: TQuery) => {
           </div>
 
           <div className="w-full sm:w-auto">
-            <CustomDateRangePicker
-              value={dateRange}
-              onChange={setDateRange}
+            <CustomDateFilter
+              value={filterDate}
+              onChange={setDateFiter}
+              placeholder="তারিখ ফিল্টার করুন"
+              className=""
             />
           </div>
 

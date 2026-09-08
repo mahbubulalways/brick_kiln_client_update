@@ -45,8 +45,7 @@ import DeliveryPrintModal from "@/components/Dashboard/PrintModal/DeliveryPrint/
 
 interface DeliveryHistoryProps {
     customerId: number;
-    startDate: string;
-    endDate: string;
+    formatDate: string,
     query: TQuery;
     setDeliveryInfo: Dispatch<
         SetStateAction<TDeliveryWithCustomer[] | undefined>
@@ -55,8 +54,7 @@ interface DeliveryHistoryProps {
 
 const DeliveryHistory = ({
     customerId,
-    startDate,
-    endDate,
+    formatDate,
     query,
     setDeliveryInfo,
 }: DeliveryHistoryProps) => {
@@ -76,8 +74,7 @@ const DeliveryHistory = ({
     } = useGetSingleCustomerDeliveryQuery(
         {
             customerId,
-            startDate,
-            endDate,
+            formatDate,
             query,
         },
         {
@@ -153,7 +150,7 @@ const DeliveryHistory = ({
                                         key={row?.id}
                                         className="transition-colors hover:bg-gray-50"
                                     >
-                                       
+
 
                                         {/* ================= Delivery No ================= */}
                                         <TableData

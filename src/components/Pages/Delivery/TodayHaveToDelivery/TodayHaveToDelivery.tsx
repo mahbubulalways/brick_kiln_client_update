@@ -30,6 +30,7 @@ import { formatDateRange } from "@/utils/formatDateRange";
 import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
 import { SERVER_ERROR_MESSAGE } from "@/constant";
 import CustomStatus from "@/components/Reusable/CustomStatus";
+import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
 
 const TodaysHaveToDelivery = ({ limit, page, search }: TQuery) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -39,12 +40,22 @@ const TodaysHaveToDelivery = ({ limit, page, search }: TQuery) => {
   const [InvoiceId, setInvoiceId] = useState<number>();
   const [InvoiceIdDelivery, setInvoiceIDelivery] = useState<number>();
   const [itemIds, setItemIds] = useState<string[]>([]);
-  const [deliveryDate, setDeliveryDate] = useState<Date | undefined>(
-    new Date()
-  );
+  const [filterDate, setDateFiter] = useState<{
+    startDate: Date | null,
+    endDate: Date | null,
+  }>({
+    startDate: new Date(),
+    endDate: null,
+  });
+
   const [openDeliveryReport, setOpenDeliveryReport] = useState<boolean>(false);
-  const isoDate = formatDateRange(String(deliveryDate));
-  const { data, isLoading, isError } = useGetDeliveryHaveTodayQuery({ date: isoDate, limit, page, search }, {
+  const formatDate = formatDateRange({
+    start: filterDate.startDate,
+    end: filterDate.endDate
+  })
+  const { data, isLoading, isError } = useGetDeliveryHaveTodayQuery({
+    date: formatDate, limit, page, search
+  }, {
     refetchOnMountOrArgChange: true,
   });
   const todaysDelivery = data?.data?.data || [];
@@ -61,7 +72,12 @@ const TodaysHaveToDelivery = ({ limit, page, search }: TQuery) => {
         />
 
         <div className="flex items-center gap-2 ">
-          <CustomDatePickerState value={deliveryDate} onChange={setDeliveryDate} placeholder="ডেলিভারি তারিখ" />
+          <CustomDateFilter
+            value={filterDate}
+            onChange={setDateFiter}
+            placeholder="তারিখ ফিল্টার করুন"
+            className=""
+          />
 
           <CustomReportButton onClick={() => setOpenDeliveryReport(true)} />
         </div>

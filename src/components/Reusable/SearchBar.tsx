@@ -44,8 +44,9 @@ const SearchBar = ({
     <div
       className={`
         flex
-        h-8
+        h-9
         w-full
+        min-w-[120]
         max-w-[250px]
         items-center
         overflow-hidden

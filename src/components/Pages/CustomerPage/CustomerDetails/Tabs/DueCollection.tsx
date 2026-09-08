@@ -45,8 +45,7 @@ import SendCustomerSmsModal from "@/components/Dashboard/Modals/SendCustomerSmsM
 
 interface DueProps {
     customerId: number;
-    startDate: string;
-    endDate: string;
+    formatDate: string;
     query: TQuery;
     setDueInfo: Dispatch<
         SetStateAction<TDueData[] | undefined>
@@ -55,8 +54,7 @@ interface DueProps {
 
 const DueCollection = ({
     customerId,
-    startDate,
-    endDate,
+    formatDate,
     query,
     setDueInfo,
 }: DueProps) => {
@@ -76,8 +74,7 @@ const DueCollection = ({
     } = useGetSingleCustomerDueCollectionQuery(
         {
             customerId,
-            startDate,
-            endDate,
+            formatDate,
             query,
         },
         {

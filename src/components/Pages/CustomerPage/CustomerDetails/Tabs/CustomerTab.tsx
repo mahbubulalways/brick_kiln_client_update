@@ -26,6 +26,8 @@ import DueCollectionPrint from "./DueCollectionPrint";
 import { TDueData } from "@/interface/due";
 import DeliveryHistoryPrint from "./DeliveryHistoryPrint";
 import { TDeliveryWithCustomer } from "@/interface/delivery";
+import { formatDateRange } from "@/utils/formatDateRange";
+import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
 
 type CustomerTab =
     | "all"
@@ -54,21 +56,19 @@ const CustomerTabs = ({
     const [activeTab, setActiveTab] =
         useState<CustomerTab>("all");
 
-    const [startDate, setStartDate] =
-        useState<Date | undefined>();
+    const [filterDate, setDateFiter] = useState<{
+        startDate: Date | null,
+        endDate: Date | null,
+    }>({
+        startDate: new Date(),
+        endDate: null,
+    });
+    const formatDate = formatDateRange({
+        start: filterDate.startDate,
+        end: filterDate.endDate
+    })
 
-    const [endDate, setEndDate] =
-        useState<Date | undefined>();
 
-    // ================= Date String =================
-
-    const startDateString = startDate
-        ? startDate.toISOString()
-        : undefined;
-
-    const endDateString = endDate
-        ? endDate.toISOString()
-        : undefined;
 
     // ================= Print Text =================
 
@@ -84,9 +84,10 @@ const CustomerTabs = ({
         setActiveTab(tab);
 
         // Reset date
-        setStartDate(undefined);
-        setEndDate(undefined);
-
+        setDateFiter({
+            endDate: null,
+            startDate: null
+        })
         // Existing search params copy
         const params = new URLSearchParams(
             searchParams.toString()
@@ -126,44 +127,32 @@ const CustomerTabs = ({
     return (
         <div className="mt-3 w-full rounded-xl border border-[#DCE5ED] bg-white p-3">
 
-            {/* ================= Filter ================= */}
-            {/* ================= Filters ================= */}
-            <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
-                        <CustomDatePickerState
-                            value={startDate}
-                            onChange={setStartDate}
-                            placeholder="শুরুর তারিখ"
-                            height="9"
-                        />
-
-                        <span className="px-1 text-sm font-medium text-slate-400">
-                            —
-                        </span>
-
-                        <CustomDatePickerState
-                            value={endDate}
-                            onChange={setEndDate}
-                            placeholder="শেষের তারিখ"
-                            height="9"
+            <div className="flex w-full flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex w-full items-center gap-2 sm:w-auto">
+                    {/* Date Filter */}
+                    <div className="min-w-0 flex-1 sm:flex-none">
+                        <CustomDateFilter
+                            value={filterDate}
+                            onChange={setDateFiter}
+                            placeholder="তারিখ ফিল্টার করুন"
+                            className="w-full sm:w-auto"
                         />
                     </div>
 
+                    {/* Print Button */}
                     <button
                         type="button"
                         onClick={handlePrint}
-                        className="flex h-9 items-center gap-2 rounded-lg bg-[#079B67] px-4 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#05875B] hover:shadow-md active:scale-[0.98]"
+                        className="flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#079B67] px-4 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#05875B] hover:shadow-md active:scale-[0.98] sm:w-auto"
                     >
                         <Printer size={16} strokeWidth={2.2} />
 
-                        <span>
+                        <span className="whitespace-nowrap">
                             {printButtonText[activeTab]}
                         </span>
                     </button>
                 </div>
             </div>
-
             {/* ================= Tabs ================= */}
             <div className="mt-4 flex w-full overflow-x-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
                 <div className="flex min-w-max items-center gap-1">
@@ -172,8 +161,8 @@ const CustomerTabs = ({
                         type="button"
                         onClick={() => handleTabChange("all")}
                         className={`flex h-9 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px] font-semibold transition-all duration-200 md:px-4 md:text-sm ${activeTab === "all"
-                                ? "bg-[#079B67] text-white shadow-sm"
-                                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                            ? "bg-[#079B67] text-white shadow-sm"
+                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                             }`}
                     >
                         <FileText
@@ -193,8 +182,8 @@ const CustomerTabs = ({
                             handleTabChange("deliveryInfo")
                         }
                         className={`flex h-9 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px] font-semibold transition-all duration-200 md:px-4 md:text-sm ${activeTab === "deliveryInfo"
-                                ? "bg-[#079B67] text-white shadow-sm"
-                                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                            ? "bg-[#079B67] text-white shadow-sm"
+                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                             }`}
                     >
                         <Truck
@@ -214,8 +203,8 @@ const CustomerTabs = ({
                             handleTabChange("dueCollection")
                         }
                         className={`flex h-9 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px] font-semibold transition-all duration-200 md:px-4 md:text-sm ${activeTab === "dueCollection"
-                                ? "bg-[#079B67] text-white shadow-sm"
-                                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                            ? "bg-[#079B67] text-white shadow-sm"
+                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                             }`}
                     >
                         <Banknote
@@ -239,12 +228,7 @@ const CustomerTabs = ({
                 {activeTab === "all" && (
                     <AllChallan
                         customerId={id}
-                        startDate={
-                            startDateString as string
-                        }
-                        endDate={
-                            endDateString as string
-                        }
+                        formatDate={formatDate}
                         query={query}
                         setInvoiceInfo={setInvoiceInfo}
                     />
@@ -255,12 +239,7 @@ const CustomerTabs = ({
                 {activeTab === "deliveryInfo" && (
                     <DeliveryHistory
                         customerId={id}
-                        startDate={
-                            startDateString as string
-                        }
-                        endDate={
-                            endDateString as string
-                        }
+                        formatDate={formatDate}
                         query={query}
                         setDeliveryInfo={setDeliveryInfo}
                     />
@@ -271,12 +250,7 @@ const CustomerTabs = ({
                 {activeTab === "dueCollection" && (
                     <DueCollection
                         customerId={id}
-                        startDate={
-                            startDateString as string
-                        }
-                        endDate={
-                            endDateString as string
-                        }
+                        formatDate={formatDate}
                         query={query}
                         setDueInfo={setDueInfo}
                     />

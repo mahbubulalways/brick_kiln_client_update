@@ -30,6 +30,7 @@ import { formatDateRange } from "@/utils/formatDateRange";
 import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
 import CustomStatus from "@/components/Reusable/CustomStatus";
 import { SERVER_ERROR_MESSAGE } from "@/constant";
+import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
 
 type PaymentRow = {
   challans: IChallanForDataShow[];
@@ -43,11 +44,20 @@ const TodayWillPayPage = ({ limit, page, search }: TQuery) => {
   const [openDueModal, setOpenDueModal] = useState<boolean>(false);
   const [openPrintModal, setOpenPrintModal] = useState<boolean>(false);
   const [openDueCollectionModal, setOpenDueCollectionModal] = useState<boolean>(false);
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const isoDate = formatDateRange(String(date));
+  const [filterDate, setDateFiter] = useState<{
+    startDate: Date | null,
+    endDate: Date | null,
+  }>({
+    startDate: new Date(),
+    endDate: null,
+  });
 
+  const formatDate = formatDateRange({
+    start: filterDate.startDate,
+    end: filterDate.endDate
+  })
   const { data, isLoading, isError, } = useGetTodayHaveDueQuery({
-    date: isoDate, limit, page, search
+    date: formatDate, limit, page, search
   }, {
     refetchOnMountOrArgChange: true,
   });
@@ -80,11 +90,11 @@ const TodayWillPayPage = ({ limit, page, search }: TQuery) => {
             onChange={(e) => setSearchItem(e.target.value)}
             onClear={() => setSearchItem("")}
           />
-          <CustomDatePickerState
-            onChange={setDate}
-            value={date}
-            placeholder="তারিখ"
-            height="8"
+          <CustomDateFilter
+            value={filterDate}
+            onChange={setDateFiter}
+            placeholder="তারিখ ফিল্টার করুন"
+            className=""
           />
           <button onClick={() => setOpenPrintModal(true)}>
             <CustomButtonFixed title="প্রিন্ট করুন" />

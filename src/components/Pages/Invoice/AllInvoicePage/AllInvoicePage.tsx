@@ -5,6 +5,7 @@ import NewDeliveryModal from "@/components/Dashboard/Modals/NewDeliveryModal";
 import SellingModal from "@/components/Dashboard/Modals/SellingModal";
 import ChalanPrintModal from "@/components/Dashboard/PrintModal/ChalanPrint/ChalanPrintModal";
 import PrintThermalInvoice from "@/components/Dashboard/PrintModal/PrintThermalInvoice";
+import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
 import CustomDateRangePicker from "@/components/Reusable/CustomDateRangePicker";
 import CustomDropDownMenuItem from "@/components/Reusable/CustomDropDownMenuItem";
 import CustomLoader from "@/components/Reusable/CustomLoader";
@@ -41,11 +42,23 @@ const AllInvoicePage = ({ limit, page, search }: TQuery) => {
     const [invoiceId, setInvoiceId] = useState<number | undefined>(undefined);
     const [openChalanDetailsModal, setOpenChalanDetailsModal] =
         useState<boolean>(false);
-    const [dateRange, setDateRange] = useState("");
 
+
+    const [filterDate, setDateFiter] = useState<{
+        startDate: Date | null,
+        endDate: Date | null,
+    }>({
+        startDate: null,
+        endDate: null,
+    });
+
+    const formatDate = formatDateRange({
+        start: filterDate.startDate,
+        end: filterDate.endDate
+    })
     const { isLoading: fetchInvoiceLoading, data } =
         useGetAllInvoicesQuery(
-            { limit, page, search, date: formatDateRange(dateRange) }
+            { limit, page, search, date: formatDate }
             , { refetchOnMountOrArgChange: true });
     // VATA INFO
     const { data: vata } = useGetVataInfoQuery(undefined)
@@ -57,7 +70,12 @@ const AllInvoicePage = ({ limit, page, search }: TQuery) => {
                 <SearchBar value={searchItems} onChange={(e) => setSearchItem(e.target.value)}
                     onClear={() => setSearchItem("")} />
                 <div className="flex items-center w-full md:w-max gap-4">
-                    <CustomDateRangePicker value={dateRange} onChange={setDateRange} />
+                    <CustomDateFilter
+                        value={filterDate}
+                        onChange={setDateFiter}
+                        placeholder="তারিখ ফিল্টার করুন"
+                        className=""
+                    />
                     <CustomReportButton
                         onClick={() => setOpenReportModal(true)}
                     />
@@ -462,7 +480,7 @@ const AllInvoicePage = ({ limit, page, search }: TQuery) => {
                 <SellingModal
                     isOpen={openReportModal}
                     onClose={() => setOpenReportModal(false)}
-                    date={dateRange}
+                    date={formatDate}
                 />
             )}
 

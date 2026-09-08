@@ -36,6 +36,7 @@ import { formatDateRange } from "@/utils/formatDateRange";
 import { SERVER_ERROR_MESSAGE } from "@/constant";
 import CustomStatus from "@/components/Reusable/CustomStatus";
 import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
+import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
 
 const AllDeliveryPage = ({ limit, page, search }: TQuery) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -47,10 +48,20 @@ const AllDeliveryPage = ({ limit, page, search }: TQuery) => {
   const [InvoiceId, setInvoiceId] = useState<number>();
   const [itemIds, setItemIds] = useState<string[]>([]);
   const [filterRange, setFilterRange] = useState("");
-
+  const [filterDate, setDateFiter] = useState<{
+    startDate: Date | null,
+    endDate: Date | null,
+  }>({
+    startDate: null,
+    endDate: null,
+  });
+  const formatDate = formatDateRange({
+    start: filterDate.startDate,
+    end: filterDate.endDate
+  })
 
   const { data, isLoading, isError } = useGetAllDeliveryListQuery({
-    date: formatDateRange(filterRange), limit, page, search
+    date: formatDate, limit, page, search
   }, {
     refetchOnMountOrArgChange: true,
   });
@@ -78,9 +89,11 @@ const AllDeliveryPage = ({ limit, page, search }: TQuery) => {
 
           {/* Date - Mobile/Tablet */}
           <div className="lg:hidden">
-            <CustomDateRangePicker
-              value={filterRange}
-              onChange={setFilterRange}
+            <CustomDateFilter
+              value={filterDate}
+              onChange={setDateFiter}
+              placeholder="তারিখ ফিল্টার করুন"
+              className=""
             />
           </div>
         </div>
@@ -89,9 +102,11 @@ const AllDeliveryPage = ({ limit, page, search }: TQuery) => {
         <div className="flex w-full items-center gap-2 lg:w-auto lg:justify-end">
           {/* Date - Large */}
           <div className="hidden lg:block">
-            <CustomDateRangePicker
-              value={filterRange}
-              onChange={setFilterRange}
+            <CustomDateFilter
+              value={filterDate}
+              onChange={setDateFiter}
+              placeholder="তারিখ ফিল্টার করুন"
+              className=""
             />
           </div>
 
