@@ -33,6 +33,9 @@ import CustomPrintButton from "@/components/Reusable/CustomPrintButton";
 import RemainingDeliveryPrint from "@/components/PrintComponent/RemainingDeliveryPrint";
 import Link from "next/link";
 import { formatDateRange } from "@/utils/formatDateRange";
+import { SERVER_ERROR_MESSAGE } from "@/constant";
+import CustomStatus from "@/components/Reusable/CustomStatus";
+import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
 
 const AllDeliveryPage = ({ limit, page, search }: TQuery) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -46,7 +49,7 @@ const AllDeliveryPage = ({ limit, page, search }: TQuery) => {
   const [filterRange, setFilterRange] = useState("");
 
 
-  const { data, isLoading } = useGetAllDeliveryListQuery({
+  const { data, isLoading, isError } = useGetAllDeliveryListQuery({
     date: formatDateRange(filterRange), limit, page, search
   }, {
     refetchOnMountOrArgChange: true,
@@ -60,8 +63,9 @@ const AllDeliveryPage = ({ limit, page, search }: TQuery) => {
   const reportItems = remainingAllDelivery(deliveries || []);
 
   return (
-    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm">
-      <div className="flex flex-col gap-2 pt-2 lg:flex-row lg:items-center lg:justify-between lg:pt-0">
+    <div className="bg-white rounded-md shadow border">
+      <div className="flex p-2 flex-col gap-2 
+       lg:flex-row lg:items-center lg:justify-between ">
         {/* Left Section */}
         <div className="flex w-full items-center gap-2 lg:w-auto">
           <div className="min-w-0 flex-1 lg:flex-none">
@@ -102,11 +106,12 @@ const AllDeliveryPage = ({ limit, page, search }: TQuery) => {
           />
         </div>
       </div>
-      <div>
-        <div className="overflow-x-auto pt-3">
-          <table className="min-w-full   text-center border-t">
-            <thead className="bg-[#039A63] text-white">
-              <tr>
+
+      <div >
+        <div className="overflow-x-auto mt-2">
+          <table className="min-w-full border-collapse ">
+            <thead>
+              <tr className="bg-[#039A63] text-white text-center">
                 <TableHead th={"চালান নং"} />
                 <TableHead th={"কাস্টমার"} />
                 <TableHead th={"ঠিকানা"} cls="hidden lg:table-cell" />
@@ -124,131 +129,142 @@ const AllDeliveryPage = ({ limit, page, search }: TQuery) => {
 
             <tbody>
               {isLoading ? (
-                <tr>
-                  <td colSpan={12}>
-                    <CustomLoader cls="h-[30vh]" />
-                  </td>
-                </tr>
-              ) : !deliveries?.length ? (
-                <tr>
-                  <td colSpan={12} className="py-8 text-gray-600">
-                    {data?.message}
-                  </td>
-                </tr>
-              ) : (
-                deliveries?.map((row: IChallanForDataShow) =>
-                  row.items?.map((item, index) => (
-                    <tr key={`${row.id}-${item.id}`} className="hover:bg-gray-50">
-                      {/* Show challan info only for the first item row */}
-                      {index === 0 ? (
-                        <>
-                          <TableData td={row?.serial} rowSpan={row.items.length} />
-                          <TableData
-                            td={row?.customer?.name}
-                            rowSpan={row.items.length}
-                          />
-                          <TableData
-                            td={row?.customer?.address}
-                            rowSpan={row.items.length}
-                            cls="hidden lg:table-cell"
-                          />
-                          <TableData
-                            td={
-                              toBanglaNumber(row?.totalDue)
-                            }
-                            rowSpan={row.items.length}
-                            cls="hidden lg:table-cell"
-                          />
-                          <TableData
-                            td={row?.note as string}
-                            cls="text-gray-700 hidden lg:table-cell"
-                            rowSpan={row.items.length}
-                          />
-                        </>
-                      ) : null}
-
-                      {/* These change per item */}
-                      <TableData td={item?.class} />
-                      <TableData td={toBanglaNumber(item?.quantity)} cls="hidden lg:table-cell" />
-                      <TableData
-                        td={item?.delivered}
-                        cls="hidden lg:table-cell"
+                <TableLazyLoading
+                  smallColumns={6}
+                  largeColumns={12}
+                  rows={6}
+                />
+              ) : isError ? <tr>
+                <td colSpan={12}>
+                  <CustomStatus
+                    type="error"
+                    description={SERVER_ERROR_MESSAGE}
+                  />
+                </td>
+              </tr>
+                : !deliveries?.length ? (
+                  <tr>
+                    <td colSpan={12} className="py-8 text-gray-600">
+                      <CustomStatus
+                        type="empty"
+                        description="কোনো ডেলিভারি পাওয়া যায়নি"
                       />
-                      <TableData td={toBanglaNumber(item?.quantity - item?.delivered)} />
-                      {index === 0 && (
+                    </td>
+                  </tr>
+                ) : (
+                  deliveries?.map((row: IChallanForDataShow) =>
+                    row.items?.map((item, index) => (
+                      <tr key={`${row.id}-${item.id}`} className="hover:bg-gray-50">
+                        {/* Show challan info only for the first item row */}
+                        {index === 0 ? (
+                          <>
+                            <TableData td={row?.serial} rowSpan={row.items.length} />
+                            <TableData
+                              td={row?.customer?.name}
+                              rowSpan={row.items.length}
+                            />
+                            <TableData
+                              td={row?.customer?.address}
+                              rowSpan={row.items.length}
+                              cls="hidden lg:table-cell"
+                            />
+                            <TableData
+                              td={
+                                toBanglaNumber(row?.totalDue)
+                              }
+                              rowSpan={row.items.length}
+                              cls="hidden lg:table-cell"
+                            />
+                            <TableData
+                              td={row?.note as string}
+                              cls="text-gray-700 hidden lg:table-cell"
+                              rowSpan={row.items.length}
+                            />
+                          </>
+                        ) : null}
+
+                        {/* These change per item */}
+                        <TableData td={item?.class} />
+                        <TableData td={toBanglaNumber(item?.quantity)} cls="hidden lg:table-cell" />
                         <TableData
-                          td={toBanglaNumber(row.items.reduce(
-                            (t, i) => t + (i.quantity - i.delivered),
-                            0
-                          ))}
-                          rowSpan={row.items.length}
+                          td={item?.delivered}
+                          cls="hidden lg:table-cell"
                         />
-                      )}
+                        <TableData td={toBanglaNumber(item?.quantity - item?.delivered)} />
+                        {index === 0 && (
+                          <TableData
+                            td={toBanglaNumber(row.items.reduce(
+                              (t, i) => t + (i.quantity - i.delivered),
+                              0
+                            ))}
+                            rowSpan={row.items.length}
+                          />
+                        )}
 
-                      <TableData
-                        td={
-                          item?.deliveryDate
-                            ? moment(item.deliveryDate).format("DD-MM-YYYY")
-                            : "---"
-                        }
-                        cls="hidden lg:table-cell"
-                      />
+                        <TableData
+                          td={
+                            item?.deliveryDate
+                              ? moment(item.deliveryDate).format("DD-MM-YYYY")
+                              : "---"
+                          }
+                          cls="hidden lg:table-cell"
+                        />
 
-                      {/* Actions only once per challan */}
-                      {index === 0 ? (
-                        <td
-                          rowSpan={row.items.length}
-                          className="border p-2 text-center align-middle"
-                        >
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="p-1.5 rounded hover:bg-gray-100 transition">
-                                <MoreVertical className="w-4 h-4 text-gray-600 cursor-pointer" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                              align="end"
-                              className="rounded-md border bg-white shadow-md"
-                            >
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setIsOpenDateChangeModal(true);
-                                  setInvoiceId(row?.serial);
-                                  setItemIds(row.items.map((itm) => itm.id));
-                                }}
+                        {/* Actions only once per challan */}
+                        {index === 0 ? (
+                          <td
+                            rowSpan={row.items.length}
+                            className="border p-2 text-center align-middle"
+                          >
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="p-1.5 rounded hover:bg-gray-100 transition">
+                                  <MoreVertical className="w-4 h-4 text-gray-600 cursor-pointer" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="end"
+                                className="rounded-md border bg-white shadow-md"
                               >
-                                <CustomDropDownMenuItem
-                                  Icon={Calendar}
-                                  title="তারিখ পরিবর্তন"
-                                />
-                              </DropdownMenuItem>
-
-                              <DropdownMenuItem onClick={() => {
-                                setIsOpen(true);
-                                setInvoiceIDelivery(row?.serial);
-                              }}>
-                                <CustomDropDownMenuItem
-                                  Icon={Truck}
-                                  title="ডেলিভারি দিন"
-                                />
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Link
-                                  href={`/dashboard/customer/profile/${row.customer.customerCode}`}>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setIsOpenDateChangeModal(true);
+                                    setInvoiceId(row?.serial);
+                                    setItemIds(row.items.map((itm) => itm.id));
+                                  }}
+                                >
                                   <CustomDropDownMenuItem
-                                    Icon={User}
-                                    title="প্রোফাইলে যান"
+                                    Icon={Calendar}
+                                    title="তারিখ পরিবর্তন"
                                   />
-                                </Link>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
-                      ) : null}
-                    </tr>
-                  ))
-                )
-              )}
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem onClick={() => {
+                                  setIsOpen(true);
+                                  setInvoiceIDelivery(row?.serial);
+                                }}>
+                                  <CustomDropDownMenuItem
+                                    Icon={Truck}
+                                    title="ডেলিভারি দিন"
+                                  />
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Link
+                                    href={`/dashboard/customer/profile/${row.customer.customerCode}`}>
+                                    <CustomDropDownMenuItem
+                                      Icon={User}
+                                      title="প্রোফাইলে যান"
+                                    />
+                                  </Link>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                        ) : null}
+                      </tr>
+                    ))
+                  )
+                )}
             </tbody>
           </table>
 

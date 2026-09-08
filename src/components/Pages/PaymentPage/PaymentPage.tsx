@@ -36,6 +36,7 @@ import CommonPrint, { TCommonPrintRef } from "@/components/Reusable/CommonPrint"
 import PaymentPrint from "@/components/PrintComponent/PaymentPrint";
 import { useGetVataInfoQuery } from "@/redux/features/vata.features";
 import { formatDateRange } from "@/utils/formatDateRange";
+import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
 
 const PaymentPage = ({ limit, page, search }: TQuery) => {
   const [searchItems, setSearchItem] = useState("");
@@ -56,7 +57,7 @@ const PaymentPage = ({ limit, page, search }: TQuery) => {
       refetchOnMountOrArgChange: true,
     },
   );
-  
+
   const printRef = useRef<TCommonPrintRef>(null);
   const [deletePaymentAsync, { isLoading: deleteLoading }] = useDeletePaymentMutation()
   // VATA INFORMATIONS
@@ -115,248 +116,260 @@ const PaymentPage = ({ limit, page, search }: TQuery) => {
 
 
   return (
-    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm">
-      <span className="bg-green-100 text-center text-green-800 px-3 py-1 rounded   border border-green-300 font-medium lg:hidden block">
-        মোট পেমেন্ট: {totalCredit} টাকা
-      </span>
-      <div className="flex w-full flex-col gap-2 pt-2 lg:flex-row lg:items-center lg:justify-between lg:gap-5 lg:pt-0">
+    <div className="bg-white rounded-md shadow border ">
+      <div className="p-2">
+        <span className="bg-green-100 text-center text-green-800 px-3 py-1 rounded   border border-green-300 font-medium lg:hidden block">
+          মোট পেমেন্ট: {totalCredit} টাকা
+        </span>
+        <div className="flex w-full flex-col gap-2 pt-2 lg:flex-row lg:items-center lg:justify-between lg:gap-5 lg:pt-0">
 
-        <div className="flex w-full items-center gap-2 lg:w-auto">
-          <CustomNewButton
-            title="নতুন পেমেন্ট"
-            onClick={() => setIsModalOpen(true)}
-            className="flex-1 lg:flex-none"
-          />
-
-
-          <span className="hidden whitespace-nowrap rounded border border-green-300 bg-green-100 px-3 py-1 font-medium text-green-800 lg:block">
-            মোট পেমেন্ট: {totalCredit} টাকা
-          </span>
-        </div>
-
-        <div className="grid w-full md:w-max grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end">
-          <div className="">
-            <CustomDatePickerState
-              onChange={setDate}
-              value={date}
-              placeholder="তারিখ"
-              height="8"
+          <div className="flex w-full items-center gap-2 lg:w-auto">
+            <CustomNewButton
+              title="নতুন পেমেন্ট"
+              onClick={() => setIsModalOpen(true)}
+              className="flex-1 lg:flex-none"
             />
+
+
+            <span className="hidden whitespace-nowrap rounded border border-green-300 bg-green-100 px-3 py-1 font-medium text-green-800 lg:block">
+              মোট পেমেন্ট: {totalCredit} টাকা
+            </span>
           </div>
 
-          <div className="min-w-0 sm:flex-1 lg:flex-none">
-            <SearchBar
-              value={searchItems}
-              onChange={(e) => setSearchItem(e.target.value)}
-              onClear={() => setSearchItem("")}
+          <div className="grid w-full md:w-max grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end">
+            <div className="">
+              <CustomDatePickerState
+                onChange={setDate}
+                value={date}
+                placeholder="তারিখ"
+                height="8"
+              />
+            </div>
+
+            <div className="min-w-0 sm:flex-1 lg:flex-none">
+              <SearchBar
+                value={searchItems}
+                onChange={(e) => setSearchItem(e.target.value)}
+                onClear={() => setSearchItem("")}
+              />
+            </div>
+
+            <CustomPrintButton
+              onClick={() => printRef.current?.print()}
+            />
+
+            <CustomReportButton
+              onClick={() => setReportModalOpen(true)}
             />
           </div>
-
-          <CustomPrintButton
-            onClick={() => printRef.current?.print()}
-          />
-
-          <CustomReportButton
-            onClick={() => setReportModalOpen(true)}
-          />
         </div>
       </div>
 
-      <div className="overflow-x-auto pt-2">
-        <table className="min-w-full   text-center border-t">
-          <thead className="bg-[#039A63] text-white">
-            <tr>
-              <TableHead th="#" cls="hidden lg:table-cell" />
-              <TableHead th="খতিয়ান" cls="hidden lg:table-cell" />
-              <TableHead th="পেমেন্টের বিবরণ" />
-              <TableHead th="পরিমাণ" />
-              <TableHead th="মোট বিল" cls="hidden lg:table-cell" />
-              <TableHead th="অগ্রিম" cls="hidden lg:table-cell" />
-              <TableHead th="কর্তন" cls="hidden lg:table-cell" />
-              <TableHead th="পেমেন্ট" />
-              <TableHead th="কম/বেশি" cls="hidden lg:table-cell" />
-              <TableHead th="ডক" cls="hidden lg:table-cell" />
-              <TableHead th="বাটন" />
-            </tr>
-          </thead>
-          <tbody>
-
-            {isLoading || isFetching ? (
-              <tr>
-                <td colSpan={11}>
-                  <CustomLoader cls="h-[30vh]" />
-                </td>
+      <div >
+        <div className="overflow-x-auto mt-2  ">
+          <table className="min-w-full border-collapse ">
+            <thead>
+              <tr className="bg-[#039A63] text-white text-center">
+                <TableHead th="#" cls="hidden lg:table-cell" />
+                <TableHead th="খতিয়ান" cls="hidden lg:table-cell" />
+                <TableHead th="পেমেন্টের বিবরণ" />
+                <TableHead th="পরিমাণ" />
+                <TableHead th="মোট বিল" cls="hidden lg:table-cell" />
+                <TableHead th="অগ্রিম" cls="hidden lg:table-cell" />
+                <TableHead th="কর্তন" cls="hidden lg:table-cell" />
+                <TableHead th="পেমেন্ট" />
+                <TableHead th="কম/বেশি" cls="hidden lg:table-cell" />
+                <TableHead th="ডক" cls="hidden lg:table-cell" />
+                <TableHead th="বাটন" />
               </tr>
-            ) : isError ? (
-              <tr>
-                <td colSpan={11} className="py-8">{SERVER_ERROR_MESSAGE}</td>
-              </tr>
-            ) : !payments?.length ? (
-              <tr>
-                <td colSpan={11} className="py-8 text-gray-600">
-                  {data?.message}
-                </td>
-              </tr>
-            ) : (payments?.map((row, index) => (
-              <React.Fragment key={row.id}>
-                <tr
-                  className="hover:bg-gray-50"
-                  onClick={() => toggleRow(row.id)}
-                >
-                  <TableData td={index + 1} cls="hidden lg:table-cell" />
-                  <TableData
-                    td={row?.ledger?.name}
-                    cls="hidden lg:table-cell"
-                  />
-                  <TableData
-                    td={row?.paymentDetails as string}
-                    cls="hidden lg:table-cell"
-                  />
-                  <TableData
-                    td={
-                      (row?.paymentDetails?.substring(0, 20) +
-                        "...") as string
-                    }
-                    cls="lg:hidden table-cell"
-                  />
-                  <TableData td={row?.quantity} />
-                  <TableData
-                    td={`৳ ${row?.totalBill}`}
-                    cls="hidden lg:table-cell"
-                  />
-                  <TableData
-                    td={
-                      row?.paymentType === "অগ্রিম পেমেন্ট"
-                        ? `৳ ${row?.payment}`
-                        : "৳ 0"
-                    }
-                    cls="border p-2 text-red-500 hidden lg:table-cell"
-                  />
-                  <TableData
-                    cls="border p-2 text-green-600 hidden lg:table-cell"
-                    td={`৳ ${row?.cutting}`}
-                  />
-                  <TableData
-                    cls="border p-2 text-green-600"
-                    td={`৳ ${row?.payment}`}
-                  />
-                  <TableData
-                    cls={`border hidden lg:table-cell p-2 ${row?.paymentDifference < 0
-                      ? "text-red-500"
-                      : row?.paymentDifference > 0
-                        ? "text-green-600"
-                        : "text-gray-600 "
-                      }`}
-                    td={`৳ ${row?.paymentDifference}`}
-                  />
+            </thead>
+            <tbody>
 
-                  <td className="border p-2 text-center align-middle">
-                    {row?.document ? (
-                      <Link
-                        href={`${process.env.NEXT_PUBLIC_BACKEND_API}/uploads/${row?.document}`}
-                        target="_blank"
-                        className="inline-flex items-center justify-center text-green-600 hover:text-green-700"
-                      >
-                        <IoDocumentTextOutline size={18} />
-                      </Link>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-
-                  <td className="border p-2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="p-1.5 rounded hover:bg-gray-100 transition">
-                          <MoreVertical className="w-4 h-4 text-gray-600 cursor-pointer" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="rounded-md border bg-white shadow-md"
-                      >
-                        <DropdownMenuItem onClick={() => {
-                          setIsUpdateModalOpen(true);
-                          setSelectedPaymentId(row?.id);
-                        }}>
-                          <CustomDropDownMenuItem
-                            Icon={Pencil}
-                            title="আপডেট"
-                          />
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                        >
-                          <Link href={`/dashboard/ledger/details/${row?.ledger?.id}`}>
-                            <CustomDropDownMenuItem
-                              Icon={GrDocument}
-                              title="খতিয়ান"
-                            />
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          disabled={deleteLoading}
-                          onClick={() => handleDeletePayment(row?.id)}
-                        >
-                          <CustomDropDownMenuItem
-                            Icon={Trash}
-                            title="ডিলেট"
-                          />
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+              {isLoading || isFetching ? (
+                <TableLazyLoading
+                  smallColumns={4}
+                  largeColumns={11}
+                  rows={10}
+                />
+              ) : isError ? (
+                <tr>
+                  <td colSpan={11}>
+                    <CustomStatus
+                      type="error"
+                      description={SERVER_ERROR_MESSAGE}
+                    />
                   </td>
                 </tr>
-                {expandedRow === row?.id && (
-                  <tr className="lg:hidden">
-                    <td
-                      colSpan={100}
-                      className="border bg-gray-50 text-left p-3 "
-                    >
-                      <div className="grid grid-cols-2 ">
-                        <div className="grid grid-cols-2 gap-1 text-sm text-gray-500">
-                          <p className="font-semibold">নং</p>
-                          <p> {row?.id}</p>
-                          <p className="font-semibold">খতিয়ান </p>
-                          <p>{row?.ledger.name}</p>
-                          <p className="font-semibold">পে.ধরন </p>
-                          <p> {row?.paymentType}</p>
-                          <p className="font-semibold">তারিখ</p>
-                          <p> {moment(row?.createdAt).format("l")}</p>
-                          <p className="font-semibold">সময়</p>
-                          <p>{row?.paymentDetails}</p>
-                        </div>
+              ) : !payments?.length ? (
+                <tr>
+                  <td colSpan={11}>
+                    <CustomStatus
+                      type="empty"
+                      description="কোনো পেমেন্ট পাওয়া যায়নি"
+                    />
+                  </td>
+                </tr>
+              ) : (payments?.map((row, index) => (
+                <React.Fragment key={row.id}>
+                  <tr
+                    className="hover:bg-gray-50"
+                    onClick={() => toggleRow(row.id)}
+                  >
+                    <TableData td={index + 1} cls="hidden lg:table-cell" />
+                    <TableData
+                      td={row?.ledger?.name}
+                      cls="hidden lg:table-cell"
+                    />
+                    <TableData
+                      td={row?.paymentDetails as string}
+                      cls="hidden lg:table-cell"
+                    />
+                    <TableData
+                      td={
+                        (row?.paymentDetails?.substring(0, 20) +
+                          "...") as string
+                      }
+                      cls="lg:hidden table-cell"
+                    />
+                    <TableData td={row?.quantity} />
+                    <TableData
+                      td={`৳ ${row?.totalBill}`}
+                      cls="hidden lg:table-cell"
+                    />
+                    <TableData
+                      td={
+                        row?.paymentType === "অগ্রিম পেমেন্ট"
+                          ? `৳ ${row?.payment}`
+                          : "৳ 0"
+                      }
+                      cls="border p-2 text-red-500 hidden lg:table-cell"
+                    />
+                    <TableData
+                      cls="border p-2 text-green-600 hidden lg:table-cell"
+                      td={`৳ ${row?.cutting}`}
+                    />
+                    <TableData
+                      cls="border p-2 text-green-600"
+                      td={`৳ ${row?.payment}`}
+                    />
+                    <TableData
+                      cls={`border hidden lg:table-cell p-2 ${row?.paymentDifference < 0
+                        ? "text-red-500"
+                        : row?.paymentDifference > 0
+                          ? "text-green-600"
+                          : "text-gray-600 "
+                        }`}
+                      td={`৳ ${row?.paymentDifference}`}
+                    />
 
-                        <div className="grid grid-cols-2 gap-1 text-sm ">
-                          <p className="font-semibold">পরিমাণ</p>
-                          <p> {row?.quantity}</p>
-                          <p className="font-semibold text-green-600">
-                            মোট বিল
-                          </p>
-                          <p className="text-green-600">{row?.totalBill}</p>
-                          <p className="font-semibold text-orange-600">
-                            কর্তন
-                          </p>
-                          <p className="text-orange-600">{row?.cutting}</p>
-                          <p className="font-semibold text-gray-500">
-                            পেমেন্ট
-                          </p>
-                          <p className="text-gray-500">{row?.payment}</p>
-                          <p className="font-semibold text-gray-500">
-                            বেশি পেমেন্ট
-                          </p>
-                          <p className="text-gray-500">
-                            {row?.paymentDifference}
-                          </p>
-                        </div>
-                      </div>
+                    <td className="border p-2 text-center align-middle">
+                      {row?.document ? (
+                        <Link
+                          href={`${process.env.NEXT_PUBLIC_BACKEND_API}/uploads/${row?.document}`}
+                          target="_blank"
+                          className="inline-flex items-center justify-center text-green-600 hover:text-green-700"
+                        >
+                          <IoDocumentTextOutline size={18} />
+                        </Link>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+
+                    <td className="border p-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-1.5 rounded hover:bg-gray-100 transition">
+                            <MoreVertical className="w-4 h-4 text-gray-600 cursor-pointer" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="rounded-md border bg-white shadow-md"
+                        >
+                          <DropdownMenuItem onClick={() => {
+                            setIsUpdateModalOpen(true);
+                            setSelectedPaymentId(row?.id);
+                          }}>
+                            <CustomDropDownMenuItem
+                              Icon={Pencil}
+                              title="আপডেট"
+                            />
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                          >
+                            <Link href={`/dashboard/ledger/details/${row?.ledger?.id}`}>
+                              <CustomDropDownMenuItem
+                                Icon={GrDocument}
+                                title="খতিয়ান"
+                              />
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={deleteLoading}
+                            onClick={() => handleDeletePayment(row?.id)}
+                          >
+                            <CustomDropDownMenuItem
+                              Icon={Trash}
+                              title="ডিলেট"
+                            />
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </tr>
-                )}
-              </React.Fragment>
-            )))}
+                  {expandedRow === row?.id && (
+                    <tr className="lg:hidden">
+                      <td
+                        colSpan={100}
+                        className="border bg-gray-50 text-left p-3 "
+                      >
+                        <div className="grid grid-cols-2 ">
+                          <div className="grid grid-cols-2 gap-1 text-sm text-gray-500">
+                            <p className="font-semibold">নং</p>
+                            <p> {row?.id}</p>
+                            <p className="font-semibold">খতিয়ান </p>
+                            <p>{row?.ledger.name}</p>
+                            <p className="font-semibold">পে.ধরন </p>
+                            <p> {row?.paymentType}</p>
+                            <p className="font-semibold">তারিখ</p>
+                            <p> {moment(row?.createdAt).format("l")}</p>
+                            <p className="font-semibold">সময়</p>
+                            <p>{row?.paymentDetails}</p>
+                          </div>
 
-          </tbody>
-        </table>
+                          <div className="grid grid-cols-2 gap-1 text-sm ">
+                            <p className="font-semibold">পরিমাণ</p>
+                            <p> {row?.quantity}</p>
+                            <p className="font-semibold text-green-600">
+                              মোট বিল
+                            </p>
+                            <p className="text-green-600">{row?.totalBill}</p>
+                            <p className="font-semibold text-orange-600">
+                              কর্তন
+                            </p>
+                            <p className="text-orange-600">{row?.cutting}</p>
+                            <p className="font-semibold text-gray-500">
+                              পেমেন্ট
+                            </p>
+                            <p className="text-gray-500">{row?.payment}</p>
+                            <p className="font-semibold text-gray-500">
+                              বেশি পেমেন্ট
+                            </p>
+                            <p className="text-gray-500">
+                              {row?.paymentDifference}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              )))}
+
+            </tbody>
+          </table>
+        </div>
         <TablePagination
           page={meta?.page ?? 1}
           totalPages={meta?.totalPages ?? 1}
@@ -364,7 +377,6 @@ const PaymentPage = ({ limit, page, search }: TQuery) => {
           title="পেমেন্ট"
         />
       </div>
-
       {isModalOpen && (
         <NewPaymentModal
           isOpen={isModalOpen}

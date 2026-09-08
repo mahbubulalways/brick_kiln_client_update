@@ -41,6 +41,8 @@ import Swal from "sweetalert2";
 import { useGetVataInfoQuery } from "@/redux/features/vata.features";
 import { formatDateRange } from "@/utils/formatDateRange";
 import { getMovementTypeBangla } from "@/utils/getLoadTypeBangla";
+import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
+import CustomStatus from "@/components/Reusable/CustomStatus";
 
 const LoadPage = ({ limit, page }: TQuery) => {
   const [date, setDate] = useState<Date | undefined>();
@@ -110,9 +112,9 @@ const LoadPage = ({ limit, page }: TQuery) => {
 
 
   return (
-    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm">
+    <div className="bg-white rounded-md shadow border">
       {/* Header */}
-      <div className="hidden md:block">
+      <div className="hidden md:block p-2">
         <div className="flex justify-between items-center pt-2 lg:pt-0 gap-5">
           <CustomNewButton title="নতুন লোড" onClick={() => setIsModalOpen(true)} />
           <div className="flex items-center justify-end gap-2">
@@ -137,7 +139,7 @@ const LoadPage = ({ limit, page }: TQuery) => {
       </div>
 
 
-      <div className="block md:hidden">
+      <div className="block md:hidden p-2">
         <div className="flex justify-between items-center pt-2 lg:pt-0 gap-2">
           <CustomNewButton title="নতুন লোড" className="w-full" onClick={() => setIsModalOpen(true)} />
           <CustomPrintButton onClick={() => printRef.current?.print()} />
@@ -166,35 +168,48 @@ const LoadPage = ({ limit, page }: TQuery) => {
         </div>
       </div>
 
-      <div className="overflow-x-auto mt-4">
-        <table className="min-w-full text-center border-t">
-          <thead className="bg-[#039A63] text-white">
-            <tr>
-              <TableHead th="তারিখ" />
-              <TableHead
-                th="রাউন্ড"
-                cls="hidden lg:table-cell"
-              />
-              <TableHead th="লোডের বিবরণ" />
-              <TableHead th="পরিমাণ" />
-              <TableHead th="বাটন" />
-            </tr>
-          </thead>
-
-          <tbody>
-            {
-              isLoading ? <tr>
-                <td colSpan={5}>
-                  <CustomLoader cls="h-[30vh]" />
-                </td>
-              </tr> : isError ? <tr>
-                <td colSpan={5} className="py-8">{SERVER_ERROR_MESSAGE}</td>
-              </tr> : !loads?.length ? <tr>
-                <td colSpan={5} className="py-8 text-gray-600">
-                  {data?.message}
-                </td>
+      <div >
+        <div className="overflow-x-auto mt-2  ">
+          <table className="min-w-full border-collapse ">
+            <thead>
+              <tr className="bg-[#039A63] text-white text-center">
+                <TableHead th="তারিখ" />
+                <TableHead
+                  th="রাউন্ড"
+                  cls="hidden lg:table-cell"
+                />
+                <TableHead th="লোডের বিবরণ" />
+                <TableHead th="পরিমাণ" />
+                <TableHead th="বাটন" />
               </tr>
-                : loads?.map((row) => (
+            </thead>
+
+            <tbody>
+              {isLoading ? (
+                <TableLazyLoading
+                  smallColumns={5}
+                  largeColumns={5}
+                  rows={6}
+                />
+              ) : !isError ?
+                <tr>
+                  <td colSpan={5}>
+                    <CustomStatus
+                      type="empty"
+                      description={SERVER_ERROR_MESSAGE}
+                    />
+                  </td>
+                </tr> :
+                !loads?.length ? (
+                  <tr>
+                    <td colSpan={5}>
+                      <CustomStatus
+                        type="error"
+                        description="কোনো লোড পাওয়া যায়নি"
+                      />
+                    </td>
+                  </tr>
+                ) : loads?.map((row) => (
                   <tr
                     key={row.id}
                     className="hover:bg-gray-50"
@@ -253,8 +268,10 @@ const LoadPage = ({ limit, page }: TQuery) => {
                     </td>
                   </tr>
                 ))}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
+
         <TablePagination
           page={meta?.page ?? 1}
           totalPages={meta?.totalPages ?? 1}

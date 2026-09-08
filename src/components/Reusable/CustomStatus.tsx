@@ -55,7 +55,7 @@ const CustomStatus: React.FC<CustomStatusProps> = ({
 
   return (
     <div
-      className={`flex ${fullScreen ? "min-h-[50vh]" : "min-h-[30vh]"
+      className={`flex ${fullScreen ? "min-h-[40vh]" : "min-h-[30vh]"
         } flex-col items-center justify-center px-6 text-center`}
     >
       <div className="mb-3">{current.icon}</div>

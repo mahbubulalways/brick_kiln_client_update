@@ -36,6 +36,8 @@ import DeliveryPrint from "@/components/PrintComponent/DeliveryPrint";
 import { useGetVataInfoQuery } from "@/redux/features/vata.features";
 import CustomPrintButton from "@/components/Reusable/CustomPrintButton";
 import { formatDateRange } from "@/utils/formatDateRange";
+import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
+import CustomStatus from "@/components/Reusable/CustomStatus";
 const TodaysDeliveryPage = ({ limit, page, }: TQuery) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -65,8 +67,8 @@ const TodaysDeliveryPage = ({ limit, page, }: TQuery) => {
 
   const result: TItems[] = groupAndSumByClass(items);
   return (
-    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm">
-      <div className="flex justify-between items-center pt-2 lg:pt-0 gap-5">
+    <div className="bg-white rounded-md shadow border">
+      <div className="flex justify-between items-center p-2  gap-5">
         <CustomNewButton title="নতুন ডেলিভারি" onClick={() => setIsOpen(!isOpen)} />
         <div className="flex items-center gap-2 ">
           <CustomDatePickerState onChange={setDate} value={date} />
@@ -77,7 +79,7 @@ const TodaysDeliveryPage = ({ limit, page, }: TQuery) => {
         </div>
       </div>
 
-      {/* Table */}
+
       <div>
         <div className="overflow-x-auto pt-3">
           <table className="min-w-full   text-center border-t">
@@ -100,98 +102,105 @@ const TodaysDeliveryPage = ({ limit, page, }: TQuery) => {
             </thead>
             <tbody>
               {isFetching ? (
-                <tr>
-                  <td colSpan={11}>
-                    <CustomLoader cls="h-[30vh]" />
-                  </td>
-                </tr>
+                <TableLazyLoading
+                  smallColumns={6}
+                  largeColumns={12}
+                  rows={6}
+                />
               ) : isError ? <tr>
-                <td colSpan={13} className="py-8 text-gray-600">
-                  {SERVER_ERROR_MESSAGE}
+                <td colSpan={12}>
+                  <CustomStatus
+                    type="error"
+                    description={SERVER_ERROR_MESSAGE}
+                  />
                 </td>
-              </tr> : !deliveries?.length ? (
-                <tr>
-                  <td colSpan={13} className="py-8 text-gray-600">
-                    {data?.message}
-                  </td>
-                </tr>
-              ) : (
-                deliveries?.map((row: TDeliveryResponse) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-
-                    <TableData td={row?.invoice.serial} />
-                    <TableData td={row?.invoice?.customer?.name} />
-                    <TableData
-                      td={row?.invoice?.customer?.address}
-                      cls="hidden lg:table-cell"
-                    />
-                    <TableData td={row?.class} />
-                    <TableData td={toBanglaNumber(row?.quantity)} cls="hidden lg:table-cell" />
-                    <TableData td={toBanglaNumber(row?.lastDelivered ?? 0)} cls="hidden lg:table-cell" />
-                    <TableData td={toBanglaNumber(row?.deliveryReceived)} />
-                    <TableData
-                      td={toBanglaNumber(row?.deliveryRemaining)}
-                      cls="hidden lg:table-cell"
-                    />
-                    <TableData td={row?.driver?.name || "-"} cls="hidden lg:table-cell" />
-                    <TableData td={toBanglaNumber(row?.deliveryReceived)} />
-                    <TableData
-                      cls="hidden lg:table-cell"
-                      td={`${moment(row?.deliveryDate).format(
-                        "DD-MM-YYYY"
-                      )} `}
-                    />
-
-                    <td className="border p-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-1.5 rounded hover:bg-gray-100 transition">
-                            <MoreVertical className="w-4 h-4 text-gray-600 cursor-pointer" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          className="rounded-md border bg-white shadow-md"
-                        >
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setOpenPrintModal(true);
-                              setDeliveryId(row?.id);
-                            }}
-                          >
-                            <CustomDropDownMenuItem
-                              Icon={Calendar}
-                              title="প্রিন্ট ডেলিভারি"
-                            />
-                          </DropdownMenuItem>
-
-                          <DropdownMenuItem onClick={() => {
-                            setOpenDeliveryDetailsModal(true),
-                              setDeliveryId(row?.id);
-                          }}>
-                            <CustomDropDownMenuItem
-                              Icon={Truck}
-                              title="ডেলিভারি বিস্তারিত"
-                            />
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Link href={`/dashboard/customer/profile/${row.invoice.customer.customerCode}`}><CustomDropDownMenuItem
-                              Icon={User}
-                              title="প্রোফাইলে যান"
-                            /></Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <CustomDropDownMenuItem
-                              Icon={User}
-                              title="ডিলিট করুন"
-                            />
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+              </tr>
+                : !deliveries?.length ? (
+                  <tr>
+                    <td colSpan={12} className="py-8 text-gray-600">
+                      <CustomStatus
+                        type="empty"
+                        description="আজকের কোনো ডেলিভারি পাওয়া যায়নি"
+                      />
                     </td>
                   </tr>
-                ))
-              )}
+                ) : (
+                  deliveries?.map((row: TDeliveryResponse) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+
+                      <TableData td={row?.invoice.serial} />
+                      <TableData td={row?.invoice?.customer?.name} />
+                      <TableData
+                        td={row?.invoice?.customer?.address}
+                        cls="hidden lg:table-cell"
+                      />
+                      <TableData td={row?.class} />
+                      <TableData td={toBanglaNumber(row?.quantity)} cls="hidden lg:table-cell" />
+                      <TableData td={toBanglaNumber(row?.lastDelivered ?? 0)} cls="hidden lg:table-cell" />
+                      <TableData td={toBanglaNumber(row?.deliveryReceived)} />
+                      <TableData
+                        td={toBanglaNumber(row?.deliveryRemaining)}
+                        cls="hidden lg:table-cell"
+                      />
+                      <TableData td={row?.driver?.name || "-"} cls="hidden lg:table-cell" />
+                      <TableData td={toBanglaNumber(row?.deliveryReceived)} />
+                      <TableData
+                        cls="hidden lg:table-cell"
+                        td={`${moment(row?.deliveryDate).format(
+                          "DD-MM-YYYY"
+                        )} `}
+                      />
+
+                      <td className="border p-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-1.5 rounded hover:bg-gray-100 transition">
+                              <MoreVertical className="w-4 h-4 text-gray-600 cursor-pointer" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="rounded-md border bg-white shadow-md"
+                          >
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setOpenPrintModal(true);
+                                setDeliveryId(row?.id);
+                              }}
+                            >
+                              <CustomDropDownMenuItem
+                                Icon={Calendar}
+                                title="প্রিন্ট ডেলিভারি"
+                              />
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem onClick={() => {
+                              setOpenDeliveryDetailsModal(true),
+                                setDeliveryId(row?.id);
+                            }}>
+                              <CustomDropDownMenuItem
+                                Icon={Truck}
+                                title="ডেলিভারি বিস্তারিত"
+                              />
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Link href={`/dashboard/customer/profile/${row.invoice.customer.customerCode}`}><CustomDropDownMenuItem
+                                Icon={User}
+                                title="প্রোফাইলে যান"
+                              /></Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <CustomDropDownMenuItem
+                                Icon={User}
+                                title="ডিলিট করুন"
+                              />
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))
+                )}
             </tbody>
           </table>
 

@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+
 import {
   Check,
   ChevronDown,
@@ -29,7 +31,10 @@ export const TablePagination = ({
   const limit = Number(searchParams.get("limit")) || 10;
 
   const [isOpen, setIsOpen] = useState(false);
+  const [openUp, setOpenUp] = useState(false);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const limitOptions = [1, 10, 30, 40, 50];
 
@@ -42,6 +47,49 @@ export const TablePagination = ({
     router.replace(`${pathname}?${params.toString()}`);
   };
 
+  // Dropdown কোন দিকে open হবে সেটা calculate করবে
+  const calculateDropdownDirection = () => {
+    if (!buttonRef.current) return;
+
+    const rect = buttonRef.current.getBoundingClientRect();
+
+    const dropdownHeight = 250;
+
+    const spaceAbove = rect.top;
+    const spaceBelow = window.innerHeight - rect.bottom;
+
+    // নিচে জায়গা কম এবং উপরে বেশি জায়গা থাকলে উপরে open হবে
+    if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+      setOpenUp(true);
+    } else {
+      setOpenUp(false);
+    }
+  };
+
+  const handleDropdownToggle = () => {
+    if (!isOpen) {
+      calculateDropdownDirection();
+    }
+
+    setIsOpen((prev) => !prev);
+  };
+
+  // Window resize হলে direction আবার calculate করবে
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleResize = () => {
+      calculateDropdownDirection();
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [isOpen]);
+
+  // Dropdown এর বাইরে click করলে close হবে
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -61,6 +109,7 @@ export const TablePagination = ({
 
   const handleLimitChange = (value: number) => {
     setIsOpen(false);
+
     updateParams(1, value);
   };
 
@@ -78,6 +127,7 @@ export const TablePagination = ({
         md:px-6 md:py-2
       "
     >
+      {/* Left Section */}
       <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-4">
         <p className="whitespace-nowrap text-xs text-gray-600 sm:text-sm">
           পৃষ্ঠা{" "}
@@ -95,30 +145,32 @@ export const TablePagination = ({
             দেখান
           </span>
 
+          {/* Dropdown */}
           <div
             ref={dropdownRef}
             className="relative"
           >
+            {/* Dropdown Button */}
             <button
+              ref={buttonRef}
               type="button"
-              onClick={() => setIsOpen((prev) => !prev)}
+              onClick={handleDropdownToggle}
               aria-haspopup="listbox"
               aria-expanded={isOpen}
               className={`
                 flex h-8 min-w-[100px]
                 cursor-pointer items-center justify-between
                 gap-3 rounded-lg border
-                bg-white px-5
-                text-sm font-semibold text-gray-700
-                 outline-none transition-all
-               
+                bg-white px-2 
+                text-[13px]  font-semibold text-gray-700
+                outline-none transition-all
                 ${isOpen
                   ? "border-[#006A4E] ring-4 ring-[#006A4E]/10"
                   : "border-gray-200 hover:border-[#006A4E]/40 hover:shadow"
                 }
               `}
             >
-              <span>{limit}</span>
+              <span>{limit}/{title}</span>
 
               <ChevronDown
                 size={16}
@@ -130,18 +182,23 @@ export const TablePagination = ({
               />
             </button>
 
+            {/* Dropdown Menu */}
             {isOpen && (
               <div
                 role="listbox"
-                className="
-                  absolute left-0 top-full z-[9999]
-                  mt-2 w-[190px]
+                className={`
+                  absolute left-0 z-[9999]
+                  w-[190px]
                   overflow-hidden
                   rounded-xl border border-gray-200
                   bg-white p-1.5
-                  shadow-[0_12px_40px_rgba(0,0,0,0.16)]
-                "
+                  ${openUp
+                    ? "bottom-full mb-2"
+                    : "top-full mt-2"
+                  }
+                `}
               >
+                {/* Dropdown Header */}
                 <div
                   className="
                     border-b border-gray-100
@@ -152,6 +209,7 @@ export const TablePagination = ({
                   প্রতি পেজে দেখান
                 </div>
 
+                {/* Options */}
                 <div className="mt-1">
                   {limitOptions.map((item) => {
                     const selected = limit === item;
@@ -167,7 +225,7 @@ export const TablePagination = ({
                           flex w-full cursor-pointer
                           items-center justify-between
                           rounded-lg px-3 py-1.5
-                          text-left text-sm transition-colors
+                          text-left text-[13px] transition-colors
                           ${selected
                             ? "bg-[#006A4E]/10 font-semibold text-[#006A4E]"
                             : "font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -186,7 +244,10 @@ export const TablePagination = ({
                               rounded-full bg-[#006A4E] text-white
                             "
                           >
-                            <Check size={12} strokeWidth={3} />
+                            <Check
+                              size={12}
+                              strokeWidth={3}
+                            />
                           </span>
                         )}
                       </button>
@@ -203,7 +264,9 @@ export const TablePagination = ({
         </div>
       </div>
 
+      {/* Pagination */}
       <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+        {/* Previous Button */}
         <button
           type="button"
           onClick={() => updateParams(page - 1, limit)}
@@ -220,9 +283,13 @@ export const TablePagination = ({
             sm:h-8 sm:w-8 sm:rounded-lg
           "
         >
-          <ChevronLeft size={14} strokeWidth={2} />
+          <ChevronLeft
+            size={14}
+            strokeWidth={2}
+          />
         </button>
 
+        {/* Current Page */}
         <div
           className="
             flex h-7 min-w-7 shrink-0
@@ -237,6 +304,7 @@ export const TablePagination = ({
           </span>
         </div>
 
+        {/* Next Button */}
         <button
           type="button"
           onClick={() => updateParams(page + 1, limit)}
@@ -253,7 +321,10 @@ export const TablePagination = ({
             sm:h-8 sm:w-8 sm:rounded-lg
           "
         >
-          <ChevronRight size={14} strokeWidth={2} />
+          <ChevronRight
+            size={14}
+            strokeWidth={2}
+          />
         </button>
       </div>
     </div>

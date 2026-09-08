@@ -27,6 +27,9 @@ import Link from "next/link";
 import TodayWillPayPrintModal from "@/components/Dashboard/PrintModal/TodayWillPayPrint/TodayWillPayPrintModal";
 import { toBanglaNumber } from "@/utils/toBanglaNumber";
 import { formatDateRange } from "@/utils/formatDateRange";
+import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
+import CustomStatus from "@/components/Reusable/CustomStatus";
+import { SERVER_ERROR_MESSAGE } from "@/constant";
 
 type PaymentRow = {
   challans: IChallanForDataShow[];
@@ -44,7 +47,8 @@ const TodayWillPayPage = ({ limit, page, search }: TQuery) => {
   const isoDate = formatDateRange(String(date));
 
   const { data, isLoading, isError, } = useGetTodayHaveDueQuery({
-     date: isoDate, limit, page, search }, {
+    date: isoDate, limit, page, search
+  }, {
     refetchOnMountOrArgChange: true,
   });
 
@@ -62,8 +66,8 @@ const TodayWillPayPage = ({ limit, page, search }: TQuery) => {
     ) || 0;
 
   return (
-    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm">
-      <div className="flex justify-between items-center pt-2 lg:pt-0 gap-5">
+    <div className="bg-white rounded-md shadow border ">
+      <div className="flex justify-between items-center p-2 gap-5">
         <div className="flex items-center gap-2 w-auto lg:w-full">
           <span className=" text-orange-500 px-3 py-1 rounded   border border-orange-300 font-medium hidden lg:block">
             মোট জমা দেবেঃ {toBanglaNumber(totalCredit)} টাকা
@@ -89,115 +93,126 @@ const TodayWillPayPage = ({ limit, page, search }: TQuery) => {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto pt-5">
-        <table className="min-w-full   text-center border-t">
-          <thead className="bg-[#039A63] text-white">
-            <tr>
-              <TableHead th={"কা.আইডি"} />
-              <TableHead th={"নাম"} />
-              <TableHead th={"ঠিকানা"} />
-              <TableHead th={"ডেলিভারি বাকি"} />
-              <TableHead th={"টাকা বাকি"} />
-              <TableHead th={"ফোন নম্বর	"} />
-              <TableHead th={"নোট"} />
-              <TableHead th={"সিজন"} />
-              <TableHead th={"বাটন"} />
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
+      <div >
+        <div className="overflow-x-auto mt-2  ">
+          <table className="min-w-full border-collapse ">
+            <thead>
+              <tr className="bg-[#039A63] text-white text-center">
+                <TableHead th={"কা.আইডি"} />
+                <TableHead th={"নাম"} />
+                <TableHead th={"ঠিকানা"} />
+                <TableHead th={"ডেলিভারি বাকি"} />
+                <TableHead th={"টাকা বাকি"} />
+                <TableHead th={"ফোন নম্বর	"} />
+                <TableHead th={"নোট"} />
+                <TableHead th={"সিজন"} />
+                <TableHead th={"বাটন"} />
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <TableLazyLoading
+                  smallColumns={9}
+                  largeColumns={9}
+                  rows={6}
+                />
+              ) : isError ? <tr>
                 <td colSpan={9}>
-                  <CustomLoader cls="h-[30vh]" />
-                </td>
-              </tr>
-            ) : isError ? <tr><td colSpan={9} className="py-8 text-gray-600">
-              {data?.message}
-            </td></tr> : !dues?.length ? (
-              <tr>
-                <td colSpan={9} className="py-8 text-gray-600">
-                  {data?.message}
-                </td>
-              </tr>
-            ) : (
-              dues?.map((row: PaymentRow) => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  <TableData td={row?.customerCode} />
-                  <TableData td={row?.name} />
-                  <TableData td={row?.address} />
-                  <TableData
-                    td={toBanglaNumber(row?.challans?.reduce((accChallan, challan) => {
-                      const itemsSum =
-                        challan.items?.reduce(
-                          (accItem, curr) =>
-                            accItem +
-                            ((curr.quantity ?? 0) - (curr.delivered ?? 0)),
-                          0,
-                        ) ?? 0;
-                      return accChallan + itemsSum;
-                    }, 0))}
+                  <CustomStatus
+                    type="error"
+                    description={SERVER_ERROR_MESSAGE}
                   />
+                </td>
+              </tr>
+                : !dues?.length ? (
+                  <tr>
+                    <td colSpan={9} className="py-8 text-gray-600">
+                      <CustomStatus
+                        type="empty"
+                        description="আজকের কোনো জমা পাওয়া যায়নি"
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  dues?.map((row: PaymentRow) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      <TableData td={row?.customerCode} />
+                      <TableData td={row?.name} />
+                      <TableData td={row?.address} />
+                      <TableData
+                        td={toBanglaNumber(row?.challans?.reduce((accChallan, challan) => {
+                          const itemsSum =
+                            challan.items?.reduce(
+                              (accItem, curr) =>
+                                accItem +
+                                ((curr.quantity ?? 0) - (curr.delivered ?? 0)),
+                              0,
+                            ) ?? 0;
+                          return accChallan + itemsSum;
+                        }, 0))}
+                      />
 
-                  <TableData td={toBanglaNumber(row?.remainingDue)} />
-                  <TableData td={toBanglaNumber(row?.phoneNumber)} />
-                  <TableData td={row?.challans[0]?.note || "-"} />
+                      <TableData td={toBanglaNumber(row?.remainingDue)} />
+                      <TableData td={toBanglaNumber(row?.phoneNumber)} />
+                      <TableData td={row?.challans[0]?.note || "-"} />
 
-                  <TableData td={row?.challans[0]?.season.name} />
+                      <TableData td={row?.challans[0]?.season.name} />
 
-                  <td className="border p-2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="p-1.5 rounded hover:bg-gray-100 transition">
-                          <MoreVertical className="w-4 h-4 text-gray-600 cursor-pointer" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="rounded-md border bg-white shadow-md"
-                      >
-                        <DropdownMenuItem onClick={() => {
-                          setCustomerId(row?.customerCode)
-                          setOpenDueModal(true)
-                        }}>
-                          <CustomDropDownMenuItem
-                            Icon={Pencil}
-                            title="তারিখ আপডেট করুন"
-                          />
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {
-                          setCustomerId(row?.customerCode)
-                          setOpenDueCollectionModal(true)
-                        }}>
-                          <CustomDropDownMenuItem
-                            Icon={Wallet2Icon}
-                            title="জমা করুন"
-                          />
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
+                      <td className="border p-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-1.5 rounded hover:bg-gray-100 transition">
+                              <MoreVertical className="w-4 h-4 text-gray-600 cursor-pointer" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="rounded-md border bg-white shadow-md"
+                          >
+                            <DropdownMenuItem onClick={() => {
+                              setCustomerId(row?.customerCode)
+                              setOpenDueModal(true)
+                            }}>
+                              <CustomDropDownMenuItem
+                                Icon={Pencil}
+                                title="তারিখ আপডেট করুন"
+                              />
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              setCustomerId(row?.customerCode)
+                              setOpenDueCollectionModal(true)
+                            }}>
+                              <CustomDropDownMenuItem
+                                Icon={Wallet2Icon}
+                                title="জমা করুন"
+                              />
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
 
-                        >
-                          <CustomDropDownMenuItem
-                            Icon={MessageSquare}
-                            title="মেসেজ করুন"
-                          />
-                        </DropdownMenuItem>
+                            >
+                              <CustomDropDownMenuItem
+                                Icon={MessageSquare}
+                                title="মেসেজ করুন"
+                              />
+                            </DropdownMenuItem>
 
-                        <DropdownMenuItem
-                        >
-                          <Link href={`/dashboard/customer/profile/${row.customerCode}`}>
-                            <CustomDropDownMenuItem
-                              Icon={User}
-                              title="প্রোফাইলে যান"
-                            /></Link>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                            <DropdownMenuItem
+                            >
+                              <Link href={`/dashboard/customer/profile/${row.customerCode}`}>
+                                <CustomDropDownMenuItem
+                                  Icon={User}
+                                  title="প্রোফাইলে যান"
+                                /></Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))
+                )}
+            </tbody>
+          </table>
+        </div>
         <TablePagination
           page={meta?.page ?? 1}
           totalPages={meta?.totalPages ?? 1}
@@ -205,6 +220,7 @@ const TodayWillPayPage = ({ limit, page, search }: TQuery) => {
           title="বাকি"
         />
       </div>
+
       {isOpen && (
         <NewPaymentModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
       )}

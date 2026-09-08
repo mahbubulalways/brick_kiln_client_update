@@ -30,6 +30,7 @@ import {
 } from "@/types/types";
 
 import { showToast } from "@/components/Toast/CustomToast";
+import { generateDeliveryDateRange } from "@/utils/generateDeliveryDateRange";
 
 const UpdateChalanModal = ({
   isOpen,
@@ -108,6 +109,9 @@ const UpdateChalanModal = ({
       },
     },
   });
+
+
+
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -317,6 +321,20 @@ const UpdateChalanModal = ({
     calculatedDue,
     setValue,
   ]);
+
+
+
+
+  const deliverySeason = watch("invoice.deliverySeason");
+
+  const isAdvanceChalan = chalanType === "অগ্রিম চালান";
+
+  const { minDate, maxDate } = generateDeliveryDateRange(
+    deliverySeason!,
+    isAdvanceChalan,
+  );
+
+
 
   // =========================================================
   // SUBMIT
@@ -672,6 +690,8 @@ const UpdateChalanModal = ({
                   name="invoice.deliveryDate"
                   placeholder="ডেলিভারি তারিখ"
                   label="ডেলিভারি তারিখ"
+                  minDate={minDate}
+                  maxDate={maxDate}
                   disablePastDates
                   rules={{
                     required:
@@ -797,8 +817,8 @@ const UpdateChalanModal = ({
                           onClick={() => remove(index)}
                           title="সারি মুছে ফেলুন"
                           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition active:scale-95 ${fields.length === 1
-                              ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
-                              : "border-red-200 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white"
+                            ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                            : "border-red-200 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white"
                             }`}
                         >
                           <Trash

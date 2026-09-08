@@ -29,6 +29,8 @@ import AllDuePrintModal from "@/components/Dashboard/PrintModal/TodayWillPayPrin
 import { formatBanglaDate } from "@/utils/formatBanglaDate";
 import { toBanglaNumber } from "@/utils/toBanglaNumber";
 import { formatDateRange } from "@/utils/formatDateRange";
+import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
+import CustomStatus from "@/components/Reusable/CustomStatus";
 
 export interface IGetAllDueList {
   id: string;
@@ -71,8 +73,9 @@ const AllDueListPage = ({ limit, page, search }: TQuery) => {
 
 
   return (
-    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm">
-      <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div className="bg-white rounded-md shadow border ">
+      <div className="flex w-full p-2 flex-col gap-3 lg:flex-row lg:items-center 
+      lg:justify-between">
 
         {/* Left */}
         <div className="flex w-full items-center justify-between gap-2 lg:w-auto lg:justify-start">
@@ -119,128 +122,135 @@ const AllDueListPage = ({ limit, page, search }: TQuery) => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto pt-5">
-        <table className="min-w-full   text-center border-t">
-          <thead className="bg-[#039A63] text-white">
-            <tr>
-              <TableHead th={"কা.আইডি"} />
-              <TableHead th={"নাম"} />
-              <TableHead th={"ঠিকানা"} />
-              <TableHead th={"ডেলিভারি বাকি"} />
-              <TableHead th={"টাকা বাকি"} />
-              <TableHead th={"পরিশোধের তারিখ"} />
-              <TableHead th={"ফোন নম্বর	"} />
-              <TableHead th={"নোট"} />
-              <TableHead th={"সিজন"} />
-              <TableHead th={"বাটন"} />
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={9}>
-                  <CustomLoader cls="h-[30vh]" />
+
+      <div >
+        <div className="overflow-x-auto mt-2  ">
+          <table className="min-w-full border-collapse ">
+            <thead>
+              <tr className="bg-[#039A63] text-white text-center">
+                <TableHead th={"কা.আইডি"} />
+                <TableHead th={"নাম"} />
+                <TableHead th={"ঠিকানা"} />
+                <TableHead th={"ডেলিভারি বাকি"} />
+                <TableHead th={"টাকা বাকি"} />
+                <TableHead th={"পরিশোধের তারিখ"} />
+                <TableHead th={"ফোন নম্বর	"} />
+                <TableHead th={"নোট"} />
+                <TableHead th={"সিজন"} />
+                <TableHead th={"বাটন"} />
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <TableLazyLoading
+                  smallColumns={10}
+                  largeColumns={10}
+                  rows={6}
+                />
+              ) : isError ? <tr>
+                <td colSpan={10}>
+                  <CustomStatus
+                    type="error"
+                    description={SERVER_ERROR_MESSAGE}
+                  />
                 </td>
               </tr>
-            ) : isError ? <tr>
-              <td colSpan={9} className="py-8 text-gray-600">
-                {SERVER_ERROR_MESSAGE}
-              </td>
-            </tr> : !dues?.length ? (
-              <tr>
-                <td colSpan={9} className="py-8 text-gray-600">
-                  {data?.message}---
-                </td>
-              </tr>
-            ) : (
-              <>
-                {dues?.map((row: IGetAllDueList) => (
-                  <tr key={row?.id} className="hover:bg-gray-50">
-                    <TableData td={row?.customerCode} />
-                    <TableData td={row?.name} />
-                    <TableData td={row?.address} />
-                    <TableData
-                      td={toBanglaNumber(row?.remainingDelivery)}
-                      cls="text-orange-500"
-                    />
-                    <TableData td={toBanglaNumber(row?.remainingDue)} />
-                    <TableData
-                      td={row?.nextDate ? formatBanglaDate({ date: row?.nextDate }) : "-"}
-                    />
-
-                    <TableData td={toBanglaNumber(row?.phoneNumber)} />
-                    <TableData td={row?.note ?? "-"} />
-                    <TableData td={row?.season} />
-
-                    <td className="border p-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-1.5 rounded hover:bg-gray-100 transition">
-                            <MoreVertical className="w-4 h-4 text-gray-600 cursor-pointer" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          className="rounded-md border bg-white shadow-md"
-                        >
-                          <DropdownMenuItem onClick={() => {
-                            setCustomerId(row?.customerCode)
-                            setOpenDueModal(true)
-                          }}>
-                            <CustomDropDownMenuItem
-                              Icon={Pencil}
-                              title="তারিখ আপডেট করুন"
-                            />
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                            setCustomerId(row?.customerCode)
-                            setOpenDueCollectionModal(true)
-                          }}>
-                            <CustomDropDownMenuItem
-                              Icon={Wallet2Icon}
-                              title="জমা করুন"
-                            />
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-
-                          >
-                            <CustomDropDownMenuItem
-                              Icon={MessageSquare}
-                              title="মেসেজ করুন"
-                            />
-                          </DropdownMenuItem>
-
-                          <DropdownMenuItem
-
-                          >
-                            <Link
-                              href={`/dashboard/customer/profile/${row.customerCode}`}
-                            >
-                              <CustomDropDownMenuItem
-                                Icon={User}
-                                title="প্রোফাইলে যান"
-                              />
-                            </Link>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                : !dues?.length ? (
+                  <tr>
+                    <td colSpan={10} >
+                      <CustomStatus
+                        type="empty"
+                        description="কোনো বাকি পাওয়া যায়নি"
+                      />
                     </td>
                   </tr>
-                ))}
-              </>
-            )}
-          </tbody>
-        </table>
+                ) : (
+                  <>
+                    {dues?.map((row: IGetAllDueList) => (
+                      <tr key={row?.id} className="hover:bg-gray-50">
+                        <TableData td={row?.customerCode} />
+                        <TableData td={row?.name} />
+                        <TableData td={row?.address} />
+                        <TableData
+                          td={toBanglaNumber(row?.remainingDelivery)}
+                          cls="text-orange-500"
+                        />
+                        <TableData td={toBanglaNumber(row?.remainingDue)} />
+                        <TableData
+                          td={row?.nextDate ? formatBanglaDate({ date: row?.nextDate }) : "-"}
+                        />
+
+                        <TableData td={toBanglaNumber(row?.phoneNumber)} />
+                        <TableData td={row?.note ?? "-"} />
+                        <TableData td={row?.season} />
+
+                        <td className="border p-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-1.5 rounded hover:bg-gray-100 transition">
+                                <MoreVertical className="w-4 h-4 text-gray-600 cursor-pointer" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="end"
+                              className="rounded-md border bg-white shadow-md"
+                            >
+                              <DropdownMenuItem onClick={() => {
+                                setCustomerId(row?.customerCode)
+                                setOpenDueModal(true)
+                              }}>
+                                <CustomDropDownMenuItem
+                                  Icon={Pencil}
+                                  title="তারিখ আপডেট করুন"
+                                />
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                setCustomerId(row?.customerCode)
+                                setOpenDueCollectionModal(true)
+                              }}>
+                                <CustomDropDownMenuItem
+                                  Icon={Wallet2Icon}
+                                  title="জমা করুন"
+                                />
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+
+                              >
+                                <CustomDropDownMenuItem
+                                  Icon={MessageSquare}
+                                  title="মেসেজ করুন"
+                                />
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem
+
+                              >
+                                <Link
+                                  href={`/dashboard/customer/profile/${row.customerCode}`}
+                                >
+                                  <CustomDropDownMenuItem
+                                    Icon={User}
+                                    title="প্রোফাইলে যান"
+                                  />
+                                </Link>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    ))}
+                  </>
+                )}
+            </tbody>
+          </table>
+        </div>
+        <TablePagination
+          page={meta?.page ?? 1}
+          totalPages={meta?.totalPages ?? 1}
+          dataLength={dues?.length}
+          title="বাকি"
+        />
       </div>
-      <TablePagination
-        page={meta?.page ?? 1}
-        totalPages={meta?.totalPages ?? 1}
-        dataLength={dues?.length}
-        title="বাকি"
-      />
-
-
 
       {
         <UpdateDueCollectionDateModal

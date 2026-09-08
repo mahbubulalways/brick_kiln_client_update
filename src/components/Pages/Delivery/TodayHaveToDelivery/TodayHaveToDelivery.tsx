@@ -27,6 +27,9 @@ import SearchBar from "@/components/Reusable/SearchBar";
 import { toBanglaNumber } from "@/utils/toBanglaNumber";
 import Link from "next/link";
 import { formatDateRange } from "@/utils/formatDateRange";
+import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
+import { SERVER_ERROR_MESSAGE } from "@/constant";
+import CustomStatus from "@/components/Reusable/CustomStatus";
 
 const TodaysHaveToDelivery = ({ limit, page, search }: TQuery) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -41,16 +44,16 @@ const TodaysHaveToDelivery = ({ limit, page, search }: TQuery) => {
   );
   const [openDeliveryReport, setOpenDeliveryReport] = useState<boolean>(false);
   const isoDate = formatDateRange(String(deliveryDate));
-  const { data, isLoading, } = useGetDeliveryHaveTodayQuery({ date: isoDate, limit, page, search }, {
+  const { data, isLoading, isError } = useGetDeliveryHaveTodayQuery({ date: isoDate, limit, page, search }, {
     refetchOnMountOrArgChange: true,
   });
   const todaysDelivery = data?.data?.data || [];
   const meta = data?.data?.meta as TMetaConfig;
   const reportItems = remainingAllDelivery(todaysDelivery || []);
   return (
-    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm">
-      {/* Top Controls */}
-      <div className="flex justify-between items-center pt-2 lg:pt-0 gap-5">
+    <div className="bg-white rounded-md shadow border ">
+
+      <div className="flex justify-between items-center p-2  gap-5">
         <SearchBar
           value={searchItem}
           onChange={(e) => setSearchItem(e.target.value)}
@@ -61,146 +64,158 @@ const TodaysHaveToDelivery = ({ limit, page, search }: TQuery) => {
           <CustomDatePickerState value={deliveryDate} onChange={setDeliveryDate} placeholder="ডেলিভারি তারিখ" />
 
           <CustomReportButton onClick={() => setOpenDeliveryReport(true)} />
-
         </div>
       </div>
-      {/* Table */}
-      <div className="overflow-x-auto pt-3">
-        <table className="min-w-full   text-center border-t">
-          <thead className="bg-[#039A63] text-white">
-            <tr>
-              <TableHead th={"চালান নং"} />
-              <TableHead th={"কাস্টমার"} />
-              <TableHead th={"ঠিকানা"} cls="hidden lg:table-cell" />
-              <TableHead th={"শ্রেণি"} />
-              <TableHead th={"ক্রয়"} cls="hidden lg:table-cell" />
-              <TableHead th={"ডেলিভারি"} cls="hidden lg:table-cell" />
-              <TableHead th={"ডে.বাকি"} />
-              <TableHead th={"মোট বাকি"} cls="hidden lg:table-cell" />
-              <TableHead th={"বাটন"} />
-            </tr>
-          </thead>
 
-          <tbody>
-            {isLoading ? (
-              <tr>
+      <div >
+        <div className="overflow-x-auto mt-2  ">
+          <table className="min-w-full border-collapse ">
+            <thead>
+              <tr className="bg-[#039A63] text-white text-center">
+                <TableHead th={"চালান নং"} />
+                <TableHead th={"কাস্টমার"} />
+                <TableHead th={"ঠিকানা"} cls="hidden lg:table-cell" />
+                <TableHead th={"শ্রেণি"} />
+                <TableHead th={"ক্রয়"} cls="hidden lg:table-cell" />
+                <TableHead th={"ডেলিভারি"} cls="hidden lg:table-cell" />
+                <TableHead th={"ডে.বাকি"} />
+                <TableHead th={"মোট বাকি"} cls="hidden lg:table-cell" />
+                <TableHead th={"বাটন"} />
+              </tr>
+            </thead>
+
+            <tbody>
+              {isLoading ? (
+                <TableLazyLoading
+                  smallColumns={6}
+                  largeColumns={9}
+                  rows={6}
+                />
+              ) : isError ? <tr>
                 <td colSpan={9}>
-                  <CustomLoader cls="h-[30vh]" />
+                  <CustomStatus
+                    type="error"
+                    description={SERVER_ERROR_MESSAGE}
+                  />
                 </td>
               </tr>
-            ) : !todaysDelivery?.length ? (
-              <tr>
-                <td colSpan={9} className="py-8 text-gray-600">
-                  {data?.message}
-                </td>
-              </tr>
-            ) : (
-              <>
-                {todaysDelivery?.map((row: TTodaySDelivery) => {
-                  const totalBaki = row.items.reduce(
-                    (acc, item) => acc + (item.quantity - item.delivered),
-                    0
-                  );
+                : !todaysDelivery?.length ? (
+                  <tr>
+                    <td colSpan={9} className="py-8 text-gray-600">
+                      <CustomStatus
+                        type="empty"
+                        description="আজকের কোনো ডেলিভারি পাওয়া যায়নি"
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  <>
+                    {todaysDelivery?.map((row: TTodaySDelivery) => {
+                      const totalBaki = row.items.reduce(
+                        (acc, item) => acc + (item.quantity - item.delivered),
+                        0
+                      );
 
-                  return row.items.map((item: IChallanItem, index: number) => (
-                    <tr
-                      key={`${row.id}-${item.id}`}
-                      className="hover:bg-gray-50"
-                    >
-                      {/* Top-level delivery info */}
-                      {index === 0 && (
-                        <>
-                          <TableData td={row.serial} rowSpan={row.items.length} />
+                      return row.items.map((item: IChallanItem, index: number) => (
+                        <tr
+                          key={`${row.id}-${item.id}`}
+                          className="hover:bg-gray-50"
+                        >
+                          {/* Top-level delivery info */}
+                          {index === 0 && (
+                            <>
+                              <TableData td={row.serial} rowSpan={row.items.length} />
+                              <TableData
+                                td={row.customer?.name}
+                                rowSpan={row.items.length}
+                              />
+                              <TableData
+                                td={row.customer?.address}
+                                rowSpan={row.items.length}
+                                cls="hidden lg:table-cell"
+                              />
+                            </>
+                          )}
+
+                          {/* Item info */}
+                          <TableData td={item.class} />
                           <TableData
-                            td={row.customer?.name}
-                            rowSpan={row.items.length}
-                          />
-                          <TableData
-                            td={row.customer?.address}
-                            rowSpan={row.items.length}
+                            td={toBanglaNumber(item.quantity)}
                             cls="hidden lg:table-cell"
                           />
-                        </>
-                      )}
+                          <TableData
+                            td={toBanglaNumber(item.delivered)}
+                            cls="hidden lg:table-cell"
+                          />
+                          {/* Daily baki */}
+                          <TableData td={toBanglaNumber(item.quantity - item.delivered)} />
 
-                      {/* Item info */}
-                      <TableData td={item.class} />
-                      <TableData
-                        td={toBanglaNumber(item.quantity)}
-                        cls="hidden lg:table-cell"
-                      />
-                      <TableData
-                        td={toBanglaNumber(item.delivered)}
-                        cls="hidden lg:table-cell"
-                      />
-                      {/* Daily baki */}
-                      <TableData td={toBanglaNumber(item.quantity - item.delivered)} />
+                          {/* Total baki — only on first item row */}
+                          {index === 0 && (
+                            <TableData
+                              td={toBanglaNumber(totalBaki)}
+                              rowSpan={row.items.length}
+                              cls="hidden lg:table-cell"
+                            />
+                          )}
 
-                      {/* Total baki — only on first item row */}
-                      {index === 0 && (
-                        <TableData
-                          td={toBanglaNumber(totalBaki)}
-                          rowSpan={row.items.length}
-                          cls="hidden lg:table-cell"
-                        />
-                      )}
+                          {/* Actions column only once */}
+                          {index === 0 && (
+                            <td className="border p-2" rowSpan={row.items.length}>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button className="p-1.5 rounded hover:bg-gray-100 transition">
+                                    <MoreVertical className="w-4 h-4 text-gray-600 cursor-pointer" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="rounded-md border bg-white shadow-md"
+                                >
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setIsOpenDateChangeModal(true);
+                                      setInvoiceId(row?.serial);
+                                      setItemIds(row.items.map((itm) => itm.id));
+                                    }}
+                                  >
+                                    <CustomDropDownMenuItem
+                                      Icon={Calendar}
+                                      title="তারিখ পরিবর্তন"
+                                    />
+                                  </DropdownMenuItem>
 
-                      {/* Actions column only once */}
-                      {index === 0 && (
-                        <td className="border p-2" rowSpan={row.items.length}>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="p-1.5 rounded hover:bg-gray-100 transition">
-                                <MoreVertical className="w-4 h-4 text-gray-600 cursor-pointer" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                              align="end"
-                              className="rounded-md border bg-white shadow-md"
-                            >
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setIsOpenDateChangeModal(true);
-                                  setInvoiceId(row?.serial);
-                                  setItemIds(row.items.map((itm) => itm.id));
-                                }}
-                              >
-                                <CustomDropDownMenuItem
-                                  Icon={Calendar}
-                                  title="তারিখ পরিবর্তন"
-                                />
-                              </DropdownMenuItem>
-
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setIsOpen(true);
-                                  setInvoiceIDelivery(row?.serial);
-                                }}
-                              >
-                                <CustomDropDownMenuItem
-                                  Icon={Truck}
-                                  title="ডেলিভারি দিন"
-                                />
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Link href={`/dashboard/customer/profile/${row.customer.customerCode}`}>
-                                  <CustomDropDownMenuItem
-                                    Icon={User}
-                                    title="প্রোফাইলে যান"
-                                  />
-                                </Link>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
-                      )}
-                    </tr>
-                  ));
-                })}
-              </>
-            )}
-          </tbody>
-        </table>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setIsOpen(true);
+                                      setInvoiceIDelivery(row?.serial);
+                                    }}
+                                  >
+                                    <CustomDropDownMenuItem
+                                      Icon={Truck}
+                                      title="ডেলিভারি দিন"
+                                    />
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <Link href={`/dashboard/customer/profile/${row.customer.customerCode}`}>
+                                      <CustomDropDownMenuItem
+                                        Icon={User}
+                                        title="প্রোফাইলে যান"
+                                      />
+                                    </Link>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
+                          )}
+                        </tr>
+                      ));
+                    })}
+                  </>
+                )}
+            </tbody>
+          </table>
+        </div>
         <TablePagination
           page={meta?.page ?? 1}
           totalPages={meta?.totalPages ?? 1}
@@ -208,6 +223,7 @@ const TodaysHaveToDelivery = ({ limit, page, search }: TQuery) => {
           title="ডেলিভারি"
         />
       </div>
+
       {isOpen && (
         <NewDeliveryModal
           isOpen={isOpen}

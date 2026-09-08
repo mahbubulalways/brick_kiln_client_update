@@ -22,6 +22,7 @@ import CustomDatePicker from "@/components/Reusable/CustomDatePicker";
 import CustomDatePickerState from "@/components/Reusable/CustomDatePickerState";
 import CustomStatus from "@/components/Reusable/CustomStatus";
 import OldCustomerModal from "./OldCustomerModal";
+import { generateDeliveryDateRange } from "@/utils/generateDeliveryDateRange";
 type TCustomModal = {
   isOpen: boolean;
   onClose: () => void;
@@ -35,9 +36,6 @@ type TCustomer = {
 };
 
 const NewChalanModal = ({ isOpen, onClose }: TCustomModal) => {
-  const [deliveryDate, setDeliveryDate] = useState<Date | undefined>(
-    new Date(),
-  );
   const [challanDate, setChallanDate] = useState<Date | undefined>(new Date());
   const [duePayDate, setDuepayDate] = useState<Date | undefined>();
   const [sendSms, setSendSms] = useState<boolean>(false);
@@ -126,6 +124,17 @@ const NewChalanModal = ({ isOpen, onClose }: TCustomModal) => {
     setValue("invoice.due", safeDue);
   }, [due, setValue, totalPrice, totalProductPrice]);
 
+  // MIN MAX DATE OF CHALLANS
+  const deliverySeason = watch("invoice.deliverySeason");
+
+  const isAdvanceChalan = chalanType === "অগ্রিম চালান";
+
+  const { minDate, maxDate } = generateDeliveryDateRange(
+    deliverySeason!,
+    isAdvanceChalan,
+  );
+
+
   //* FORM SUBMIT
   const onSubmit: SubmitHandler<TChallanCreate> = async (data) => {
     const allValid = watchItems.every((item) =>
@@ -141,7 +150,6 @@ const NewChalanModal = ({ isOpen, onClose }: TCustomModal) => {
         },
       });
     }
-    data.invoice.deliveryDate = deliveryDate as Date;
     data.invoice.challanDate = challanDate as Date;
     data.invoice.duePaymentDate = duePayDate as Date;
     data.invoice.serial = Number(data.invoice.serial);
@@ -366,6 +374,8 @@ const NewChalanModal = ({ isOpen, onClose }: TCustomModal) => {
                     placeholder="ডেলিভারি তারিখ"
                     label="ডেলিভারি তারিখ"
                     disablePastDates
+                    minDate={minDate}
+                    maxDate={maxDate}
                     error={errors.invoice?.deliveryDate}
                     rules={{
                       required: "ডেলিভারি তারিখ নির্বাচন করুন",

@@ -32,6 +32,8 @@ import CashPagePrint from "./CashPagePrint";
 import { useGetVataInfoQuery } from "@/redux/features/vata.features";
 import CashReportModal from "@/components/Dashboard/Modals/ReportModal/CashReportModal";
 import { formatDateRange } from "@/utils/formatDateRange";
+import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
+import CustomStatus from "@/components/Reusable/CustomStatus";
 
 const CashPage = ({ limit, page, search }: TQuery) => {
   const [searchItem, setSearchItem] = useState("");
@@ -49,7 +51,7 @@ const CashPage = ({ limit, page, search }: TQuery) => {
     page,
     limit,
     search: search || undefined,
-    date: formatDateRange(String(date)) ,
+    date: formatDateRange(String(date)),
   });
   const [deleteCash, { isLoading: isDeleting }] =
     useDeleteCashMutation();
@@ -112,10 +114,9 @@ const CashPage = ({ limit, page, search }: TQuery) => {
 
 
   return (
-    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm">
-      {/* Header */}
+    <div className="bg-white rounded-md shadow border ">
 
-      <div className="hidden  md:block">
+      <div className="hidden p-2  md:block">
         <div className="flex items-center gap-3 justify-between pt-3 lg:pt-0">
           <CustomNewButton title="নতুন হিসাব" onClick={() => setIsModalOpen(true)} />
           <div className="flex items-center gap-3 w-full lg:w-auto">
@@ -147,11 +148,7 @@ const CashPage = ({ limit, page, search }: TQuery) => {
       </div>
 
 
-
-
-
-      <div className=" md:hidden block">
-
+      <div className="p-2 md:hidden block">
         <div className="flex w-full items-center gap-3 ">
           <div className="min-w-0 flex-1">
             <CustomNewButton
@@ -186,39 +183,47 @@ const CashPage = ({ limit, page, search }: TQuery) => {
 
 
 
-      <div className="overflow-x-auto mt-2">
-        <table className="min-w-full border-t">
-          <thead>
-            <tr className="bg-[#039A63] text-white text-center">
-              <TableHead th={"#"} />
-              <TableHead th={"উৎস"} />
-              <TableHead th={"ক্যাশের বিবরণ"} />
-              <TableHead th={"ক্যাশ ইন"} />
-              <TableHead th={"ক্যাশ আউট"} />
-              <TableHead th={"সময়"} />
-              <TableHead th={"বাটন"} />
-            </tr>
-          </thead>
+      <div >
+        <div className="overflow-x-auto mt-2  ">
+          <table className="min-w-full border-collapse ">
+            <thead>
+              <tr className="bg-[#039A63] text-white text-center">
+                <TableHead th={"#"} />
+                <TableHead th={"উৎস"} />
+                <TableHead th={"ক্যাশের বিবরণ"} />
+                <TableHead th={"ক্যাশ ইন"} />
+                <TableHead th={"ক্যাশ আউট"} />
+                <TableHead th={"সময়"} />
+                <TableHead th={"বাটন"} />
+              </tr>
+            </thead>
 
-          <tbody className="text-center">
-            {
-              isLoading ?
-                <tr>
+            <tbody className="text-center">
+              {
+                isLoading ? (
+                  <TableLazyLoading
+                    smallColumns={7}
+                    largeColumns={7}
+                    rows={6}
+                  />
+                ) : isError ? <tr>
                   <td colSpan={7}>
-                    <CustomLoader cls="h-[30vh]" />
+                    <CustomStatus
+                      type="error"
+                      description={SERVER_ERROR_MESSAGE}
+                    />
                   </td>
-                </tr> : isError ?
-                  <tr>
-                    <td colSpan={7} className="py-8 text-gray-600">
-                      {SERVER_ERROR_MESSAGE}
-                    </td>
-                  </tr> : !cashData?.length ?
+                </tr>
+                  : !cashData?.length ? (
                     <tr>
                       <td colSpan={7} className="py-8 text-gray-600">
-                        {cashResponse?.message}
+                        <CustomStatus
+                          type="empty"
+                          description="কোনো ক্যাশ পাওয়া যায়নি"
+                        />
                       </td>
-                    </tr> :
-
+                    </tr>
+                  ) :
                     cashData?.map((row, idx) => (
                       <tr
                         key={idx + 1}
@@ -265,9 +270,10 @@ const CashPage = ({ limit, page, search }: TQuery) => {
                         </td>
                       </tr>
                     ))
-            }
-          </tbody>
-        </table>
+              }
+            </tbody>
+          </table>
+        </div>
         <TablePagination
           page={meta?.page ?? 1}
           totalPages={meta?.totalPages ?? 1}

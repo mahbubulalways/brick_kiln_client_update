@@ -1,9 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import {
     ArrowDownToLine,
     ArrowUpFromLine,
+    CircleCheck,
+    Wrench,
 } from "lucide-react";
 
 import { useGetGoodIssueHistoryQuery } from "@/redux/features/goods_issue.features";
@@ -11,29 +14,36 @@ import { useGetGoodIssueHistoryQuery } from "@/redux/features/goods_issue.featur
 import CustomLoader from "@/components/Reusable/CustomLoader";
 import TableHead from "@/components/Reusable/TableHead";
 import TableData from "@/components/Reusable/TableData";
+import ImageViewModal from "@/components/Dashboard/common/ImageViewModal";
 
 import { toBanglaNumber } from "@/utils/toBanglaNumber";
 import { formatBanglaDate } from "@/utils/formatBanglaDate";
+
 import { TGoodsIssueHistory } from "@/interface/good_stock";
-import { TablePagination } from "@/components/Reusable/TablePagination";
 import { TQuery } from "@/interface/query";
 import { TMetaConfig } from "@/interface/meta";
-import { useState } from "react";
-import ImageViewModal from "@/components/Dashboard/common/ImageViewModal";
-
-
+import { TablePagination } from "@/components/Reusable/TablePagination";
 
 export default function AssetHistory({ limit, page }: TQuery) {
     const {
         data,
         isLoading,
         isError,
-    } = useGetGoodIssueHistoryQuery({ limit, page });
+    } = useGetGoodIssueHistoryQuery({
+        limit,
+        page,
+    });
+
     const [imageModal, setImageModal] = useState(false);
     const [image, setImage] = useState("");
+
     const issues: TGoodsIssueHistory[] = data?.data?.data || [];
-    const meta = data?.data?.meta as TMetaConfig
+    const meta = data?.data?.meta as TMetaConfig;
+
+    // =========================
     // Summary
+    // =========================
+
     const totalIssue = issues
         .filter((item) => item.type === "ISSUE")
         .reduce(
@@ -62,9 +72,133 @@ export default function AssetHistory({ limit, page }: TQuery) {
         0,
     );
 
+    // =========================
+    // Type Badge
+    // =========================
+
+    const renderTypeBadge = (type: string) => {
+        switch (type) {
+            case "ISSUE":
+                return (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-orange-50 px-2.5 py-1 text-xs font-medium text-orange-500">
+                        <ArrowUpFromLine size={13} />
+                        ইস্যু
+                    </span>
+                );
+
+            case "RETURN":
+                return (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-500">
+                        <ArrowDownToLine size={13} />
+                        ফেরত
+                    </span>
+                );
+
+            case "LOST":
+                return (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-green-50 px-2.5 py-1 text-xs font-medium text-green-600">
+                        <CircleCheck size={13} />
+                        উদ্ধার
+                    </span>
+                );
+
+            case "DAMAGED_REPAIRED":
+                return (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-500">
+                        <Wrench size={13} />
+                        মেরামত
+                    </span>
+                );
+
+            default:
+                return (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500">
+                        -
+                    </span>
+                );
+        }
+    };
+
+    // =========================
+    // Status
+    // =========================
+
+    const renderStatus = (issue: TGoodsIssueHistory) => {
+        if (issue.type === "ISSUE") {
+            return (
+                <span className="text-gray-400">
+                    -
+                </span>
+            );
+        }
+
+        return (
+            <div className="flex flex-wrap justify-center gap-1.5">
+                {issue.okay ? (
+                    <span className="rounded bg-green-50 px-2 py-1 text-xs text-green-600">
+                        G:{issue.okay}
+                    </span>
+                ) : ""}
+
+                {issue.damage ? (
+                    <span className="rounded bg-orange-50 px-2 py-1 text-xs text-orange-600">
+                        D:{issue.damage}
+                    </span>
+                ) : ""}
+
+                {issue.lost ? (
+                    <span className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                        L:{issue.lost}
+                    </span>
+                ) : ""}
+
+                {!issue.okay ?
+                    !issue.damage &&
+                    !issue.lost && (
+                        <span className="text-gray-400">
+                            -
+                        </span>
+                    ) : ""}
+            </div>
+        );
+    };
+
+    // =========================
+    // Description
+    // =========================
+
+    const renderDescription = (issue: TGoodsIssueHistory) => {
+        if (issue.description) {
+            return <p>{issue.description}</p>;
+        }
+
+        if (issue.receiveBy || issue.returnBy) {
+            return (
+                <div className="space-y-1 text-sm">
+                    {issue.receiveBy && (
+                        <p className="text-gray-700">
+                            নিয়েছে: {issue.receiveBy}
+                        </p>
+                    )}
+
+                    {issue.returnBy && (
+                        <p className="text-blue-600">
+                            দিয়েছে: {issue.returnBy}
+                        </p>
+                    )}
+                </div>
+            );
+        }
+
+        return (
+            <span className="text-gray-400">
+                -
+            </span>
+        );
+    };
+
     return (
         <div className="w-full space-y-5">
-            {/* Header */}
             <div>
                 <h1 className="text-xl font-semibold text-gray-800">
                     মালামালের হিস্টোরি
@@ -76,6 +210,7 @@ export default function AssetHistory({ limit, page }: TQuery) {
             </div>
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {/* Total Issue */}
                 <div className="rounded-xl border border-green-100 bg-green-50 p-4">
                     <p className="text-sm text-gray-500">
                         মোট ইস্যু
@@ -86,6 +221,7 @@ export default function AssetHistory({ limit, page }: TQuery) {
                     </h2>
                 </div>
 
+                {/* Total Return */}
                 <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
                     <p className="text-sm text-gray-500">
                         মোট ফেরত
@@ -96,6 +232,7 @@ export default function AssetHistory({ limit, page }: TQuery) {
                     </h2>
                 </div>
 
+                {/* Total Damage */}
                 <div className="rounded-xl border border-orange-100 bg-orange-50 p-4">
                     <p className="text-sm text-gray-500">
                         মোট নষ্ট
@@ -106,6 +243,7 @@ export default function AssetHistory({ limit, page }: TQuery) {
                     </h2>
                 </div>
 
+                {/* Total Lost */}
                 <div className="rounded-xl border border-red-100 bg-red-50 p-4">
                     <p className="text-sm text-gray-500">
                         মোট হারানো
@@ -117,45 +255,28 @@ export default function AssetHistory({ limit, page }: TQuery) {
                 </div>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                        <thead>
+
+            <div>
+                <div className="overflow-x-auto mt-5 border rounded-t-md">
+                    <table className="min-w-full border-collapse rounded-t-md">
+                        <thead className="rounded-t-md">
                             <tr className="bg-[#159B6B] text-white">
-                                <TableHead
-                                    th="তারিখ"
-                                />
-                                <TableHead
-                                    th="টাইপ"
-                                />
-                                <TableHead
-                                    th="মালামাল"
-
-                                />
-                                <TableHead
-                                    th="বিবরণ"
-                                />
-
-                                <TableHead
-                                    th="পরিমাণ"
-                                />
-
-                                <TableHead
-                                    th="অবস্থা"
-                                />
-
-                                <TableHead
-                                    th="প্রমাণ"
-
-                                />
+                                <TableHead th="তারিখ" />
+                                <TableHead th="টাইপ" />
+                                <TableHead th="মালামাল" />
+                                <TableHead th="বিবরণ" />
+                                <TableHead th="পরিমাণ" />
+                                <TableHead th="অবস্থা" />
+                                <TableHead th="প্রমাণ" />
                             </tr>
                         </thead>
 
                         <tbody className="text-center">
+                            {/* Loading */}
                             {isLoading && (
                                 <tr>
                                     <td
-                                        colSpan={8}
+                                        colSpan={7}
                                         className="py-10"
                                     >
                                         <CustomLoader cls="h-[20vh]" />
@@ -163,10 +284,11 @@ export default function AssetHistory({ limit, page }: TQuery) {
                                 </tr>
                             )}
 
+                            {/* Error */}
                             {!isLoading && isError && (
                                 <tr>
                                     <td
-                                        colSpan={8}
+                                        colSpan={7}
                                         className="py-8 text-sm text-red-500"
                                     >
                                         তথ্য লোড করতে সমস্যা হয়েছে।
@@ -180,7 +302,7 @@ export default function AssetHistory({ limit, page }: TQuery) {
                                 issues.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={8}
+                                            colSpan={7}
                                             className="py-8 text-sm text-gray-500"
                                         >
                                             কোনো তথ্য পাওয়া যায়নি।
@@ -191,144 +313,90 @@ export default function AssetHistory({ limit, page }: TQuery) {
                             {/* Data */}
                             {!isLoading &&
                                 !isError &&
-                                issues.map(
-                                    (issue) => (
-                                        <tr
-                                            key={issue.id}
-                                            className="border-b border-gray-200 transition-colors last:border-b-0 hover:bg-gray-50"
-                                        >
+                                issues.map((issue) => (
+                                    <tr
+                                        key={issue.id}
+                                        className="border-b border-gray-200 transition-colors last:border-b-0 hover:bg-gray-50"
+                                    >
+                                        {/* Date */}
+                                        <TableData
+                                            td={formatBanglaDate({
+                                                date: issue.date,
+                                            })}
+                                        />
 
-                                            <TableData
-                                                td={formatBanglaDate({ date: issue.date, })}
-                                            />
+                                        {/* Type */}
+                                        <td className="border-r border-gray-100 px-3 py-3">
+                                            {renderTypeBadge(
+                                                issue.type,
+                                            )}
+                                        </td>
 
-                                            <td className="border-r border-gray-100 px-3 py-3">
-                                                {issue.type ===
-                                                    "ISSUE" ? (
-                                                    <span className="inline-flex items-center gap-1 rounded-md bg-orange-50 px-2.5 py-1 text-xs font-medium text-orange-500">
-                                                        <ArrowUpFromLine
-                                                            size={13}
-                                                        />
+                                        {/* Good */}
+                                        <TableData
+                                            td={
+                                                issue.good?.name || "-"
+                                            }
+                                        />
 
-                                                        ইস্যু
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-500">
-                                                        <ArrowDownToLine
-                                                            size={13}
-                                                        />
+                                        {/* Description */}
+                                        <td className="border-r border-gray-100 px-3 py-3 text-nowrap">
+                                            {renderDescription(issue)}
+                                        </td>
 
-                                                        ফেরত
-                                                    </span>
-                                                )}
-                                            </td>
+                                        {/* Quantity */}
+                                        <TableData
+                                            td={toBanglaNumber(
+                                                issue.quantity || 0,
+                                            )}
+                                            cls="font-semibold"
+                                        />
 
-                                            <TableData
-                                                td={
-                                                    issue.good?.name ||
-                                                    "-"
-                                                }
-                                            />
+                                        {/* Status */}
+                                        <td className="border-r border-gray-100 px-3 py-3 text-nowrap">
+                                            {renderStatus(issue)}
+                                        </td>
 
-                                            <td className="border-r border-gray-100 px-3 py-3 text-nowrap">
-                                                <div className="space-y-1 text-sm">
-                                                    {issue.receiveBy && (
-                                                        <p className="text-gray-700">নিয়েছে: {issue.receiveBy}
-                                                        </p>
-                                                    )}
-
-                                                    {issue.returnBy && (
-                                                        <p className="text-blue-600">
-                                                            দিয়েছে:  {issue.returnBy}
-                                                        </p>
-                                                    )}
-
-                                                    {!issue.receiveBy &&
-                                                        !issue.returnBy && (
-                                                            <span className="text-gray-400">
-                                                                -
-                                                            </span>
-                                                        )}
-                                                </div>
-                                            </td>
-
-                                            <TableData
-                                                td={toBanglaNumber(
-                                                    issue.quantity ||
-                                                    0,
-                                                )}
-                                                cls="font-semibold"
-                                            />
-
-                                            <td className="border-r border-gray-100 px-3 py-3 text-nowrap">
-                                                {issue.type ===
-                                                    "ISSUE" ? (
-                                                    <span className="text-gray-400">
-                                                        -
-                                                    </span>
-                                                ) : (
-                                                    <div className="flex flex-wrap justify-center gap-1.5">
-                                                        {
-                                                            issue?.okay ?
-                                                                <span className="rounded bg-green-50 px-2 py-1 text-xs text-green-600">
-                                                                    G:{issue.okay}
-                                                                </span> : ""
-                                                        }
-
-                                                        {
-                                                            issue?.damage ?
-                                                                <span className="rounded bg-orange-50 px-2 py-1 text-xs text-orange-600">
-                                                                    D:{issue.damage}
-                                                                </span> : ""
-                                                        }
-
-                                                        {
-                                                            issue.lost ?
-                                                                <span className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-                                                                    L:{issue.lost}
-                                                                </span> : ""
-                                                        }
-                                                    </div>
-                                                )}
-                                            </td>
-
-                                            <td className="px-3 py-3">
-                                                {issue.image ? (
-                                                    <Image
-                                                        onClick={() => {
-                                                            setImage(issue?.image);
-                                                            setImageModal(true);
-                                                        }}
-                                                        unoptimized
-                                                        src={
-                                                            `${process.env.NEXT_PUBLIC_BACKEND_API}/uploads/${issue.image}`
-                                                        }
-                                                        alt="প্রমাণ"
-                                                        height={100}
-                                                        width={100}
-                                                        className="object-cover cursor-pointer mx-auto h-10 w-10"
-                                                    />
-                                                ) : (
-                                                    <span className="text-gray-400 text-center">
-                                                        -
-                                                    </span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    )
-                                )}
+                                        {/* Image */}
+                                        <td className="px-3 py-3">
+                                            {issue.image ? (
+                                                <Image
+                                                    onClick={() => {
+                                                        setImage(
+                                                            issue.image!,
+                                                        );
+                                                        setImageModal(
+                                                            true,
+                                                        );
+                                                    }}
+                                                    unoptimized
+                                                    src={`${process.env.NEXT_PUBLIC_BACKEND_API}/uploads/${issue.image}`}
+                                                    alt="প্রমাণ"
+                                                    height={100}
+                                                    width={100}
+                                                    className="mx-auto h-10 w-10 cursor-pointer object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-center text-gray-400">
+                                                    -
+                                                </span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
                         </tbody>
                     </table>
                 </div>
-
                 <TablePagination
                     page={meta?.page ?? 1}
                     totalPages={meta?.totalPages ?? 1}
-                    dataLength={issues?.length}
+                    dataLength={issues.length}
                     title="হিস্টোরি"
                 />
             </div>
-            {imageModal && image &&
+
+
+            {imageModal && image && (
                 <ImageViewModal
                     image={image}
                     isOpen={imageModal}
@@ -337,7 +405,7 @@ export default function AssetHistory({ limit, page }: TQuery) {
                         setImage("");
                     }}
                 />
-            }
+            )}
         </div>
     );
 }

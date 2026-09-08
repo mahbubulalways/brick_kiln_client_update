@@ -9,6 +9,7 @@ import {
 } from "react-hook-form";
 
 import { Calendar } from "@/components/ui/calendar";
+
 import {
     Popover,
     PopoverContent,
@@ -22,10 +23,13 @@ type TCustomDatePickerProps = {
     placeholder?: string;
     rules?: RegisterOptions;
     error?: FieldError;
+
     disablePastDates?: boolean;
     maxFutureDays?: number;
+
     minDate?: Date;
     maxDate?: Date;
+
     border?: boolean;
 };
 
@@ -36,10 +40,13 @@ const CustomDatePicker = ({
     placeholder = "Select a date",
     rules,
     error,
+
     disablePastDates = false,
     maxFutureDays,
+
     minDate,
     maxDate,
+
     border = true,
 }: TCustomDatePickerProps) => {
     const [open, setOpen] = useState(false);
@@ -57,25 +64,65 @@ const CustomDatePicker = ({
     );
 
     // ==========================================
-    // MIN DATE
+    // NORMALIZE DATE
     // ==========================================
 
-    const resolvedMinDate = disablePastDates
-        ? today
-        : minDate;
+    const normalizeDate = (date?: Date) => {
+        if (!date) return undefined;
+
+        return new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate(),
+        );
+    };
+
+    const normalizedMinDate = normalizeDate(minDate);
+    const normalizedMaxDate = normalizeDate(maxDate);
 
     // ==========================================
-    // MAX DATE
+    // RESOLVED MIN DATE
     // ==========================================
 
-    const resolvedMaxDate =
-        maxFutureDays !== undefined
-            ? new Date(
-                  today.getFullYear(),
-                  today.getMonth(),
-                  today.getDate() + maxFutureDays,
-              )
-            : maxDate;
+    let resolvedMinDate: Date | undefined;
+
+    if (disablePastDates && normalizedMinDate) {
+        // Take the later date
+        resolvedMinDate =
+            today > normalizedMinDate
+                ? today
+                : normalizedMinDate;
+    } else if (disablePastDates) {
+        resolvedMinDate = today;
+    } else {
+        resolvedMinDate = normalizedMinDate;
+    }
+
+    // ==========================================
+    // RESOLVED MAX DATE
+    // ==========================================
+
+    let resolvedMaxDate: Date | undefined;
+
+    if (maxFutureDays !== undefined) {
+        const futureDate = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate() + maxFutureDays,
+        );
+
+        if (normalizedMaxDate) {
+            // Take the earlier date
+            resolvedMaxDate =
+                futureDate < normalizedMaxDate
+                    ? futureDate
+                    : normalizedMaxDate;
+        } else {
+            resolvedMaxDate = futureDate;
+        }
+    } else {
+        resolvedMaxDate = normalizedMaxDate;
+    }
 
     // ==========================================
     // FORMAT DATE
@@ -102,6 +149,10 @@ const CustomDatePicker = ({
 
     return (
         <div className="w-full">
+            {/* ==========================================
+                LABEL
+            ========================================== */}
+
             {label && (
                 <label className="mb-1 block text-sm font-medium text-gray-600">
                     {label}
@@ -114,6 +165,10 @@ const CustomDatePicker = ({
                 </label>
             )}
 
+            {/* ==========================================
+                CONTROLLER
+            ========================================== */}
+
             <Controller
                 control={control}
                 name={name}
@@ -125,11 +180,11 @@ const CustomDatePicker = ({
 
                     const selectedDate =
                         field.value instanceof Date &&
-                        !isNaN(field.value.getTime())
+                            !isNaN(field.value.getTime())
                             ? field.value
                             : field.value
-                              ? new Date(field.value)
-                              : undefined;
+                                ? new Date(field.value)
+                                : undefined;
 
                     return (
                         <div className="relative w-full">
@@ -145,29 +200,26 @@ const CustomDatePicker = ({
                                     <button
                                         type="button"
                                         onBlur={field.onBlur}
-                                        className={`relative flex h-9 w-full items-center rounded-lg bg-white text-left transition-colors ${
-                                            border
-                                                ? "border px-4 py-2"
-                                                : ""
-                                        } ${
-                                            error
+                                        className={`relative flex h-9 w-full items-center rounded-lg bg-white text-left transition-colors ${border
+                                            ? "border px-4 py-2"
+                                            : ""
+                                            } ${error
                                                 ? "border-2 border-red-500"
                                                 : border
-                                                  ? "border-gray-300 focus:ring-2 focus:ring-[#006A4E]"
-                                                  : ""
-                                        }`}
+                                                    ? "border-gray-300 focus:ring-2 focus:ring-[#006A4E]"
+                                                    : ""
+                                            }`}
                                     >
                                         <span
-                                            className={`w-full truncate pr-8 text-sm ${
-                                                selectedDate
-                                                    ? "text-black"
-                                                    : "text-black/50"
-                                            }`}
+                                            className={`w-full truncate pr-8 text-sm ${selectedDate
+                                                ? "text-black"
+                                                : "text-black/50"
+                                                }`}
                                         >
                                             {selectedDate
                                                 ? formatDate(
-                                                      selectedDate,
-                                                  )
+                                                    selectedDate,
+                                                )
                                                 : placeholder}
                                         </span>
 
@@ -192,14 +244,17 @@ const CustomDatePicker = ({
                                         mode="single"
                                         selected={selectedDate}
                                         captionLayout="dropdown"
+
                                         fromYear={
                                             resolvedMinDate?.getFullYear() ??
                                             2000
                                         }
+
                                         toYear={
                                             resolvedMaxDate?.getFullYear() ??
                                             new Date().getFullYear() + 10
                                         }
+
                                         onSelect={(date) => {
                                             if (!date) {
                                                 field.onChange(
@@ -208,7 +263,10 @@ const CustomDatePicker = ({
                                                 return;
                                             }
 
-                                            // Keep only calendar date
+                                            // ==========================================
+                                            // KEEP ONLY CALENDAR DATE
+                                            // ==========================================
+
                                             const selected =
                                                 new Date(
                                                     date.getFullYear(),
@@ -216,49 +274,82 @@ const CustomDatePicker = ({
                                                     date.getDate(),
                                                 );
 
+                                            // ==========================================
+                                            // EXTRA SAFETY CHECK
+                                            // ==========================================
+
+                                            if (
+                                                resolvedMinDate &&
+                                                selected <
+                                                resolvedMinDate
+                                            ) {
+                                                return;
+                                            }
+
+                                            if (
+                                                resolvedMaxDate &&
+                                                selected >
+                                                resolvedMaxDate
+                                            ) {
+                                                return;
+                                            }
+
                                             field.onChange(
                                                 selected,
                                             );
 
                                             setOpen(false);
                                         }}
+
+                                        // ==========================================
+                                        // DISABLE DATES
+                                        // ==========================================
+
                                         disabled={(date) => {
+                                            const currentDate =
+                                                new Date(
+                                                    date.getFullYear(),
+                                                    date.getMonth(),
+                                                    date.getDate(),
+                                                );
+
+                                            // Before minimum date
                                             if (
                                                 resolvedMinDate &&
-                                                date <
-                                                    resolvedMinDate
+                                                currentDate <
+                                                resolvedMinDate
                                             ) {
                                                 return true;
                                             }
 
+                                            // After maximum date
                                             if (
                                                 resolvedMaxDate &&
-                                                date >
-                                                    resolvedMaxDate
+                                                currentDate >
+                                                resolvedMaxDate
                                             ) {
                                                 return true;
                                             }
 
                                             return false;
                                         }}
-                                       
                                     />
                                 </PopoverContent>
                             </Popover>
+
+                            {/* ==========================================
+                                ERROR
+                            ========================================== */}
+
+                            {error && (
+                                <p className="mt-1 text-sm text-red-600">
+                                    {error.message}
+                                </p>
+                            )}
                         </div>
                     );
                 }}
             />
-
-            {/* ==========================================
-                ERROR
-            ========================================== */}
-
-            {error && (
-                <p className="mt-1 text-sm text-red-600">
-                    {error.message}
-                </p>
-            )}
         </div>
     );
 };
