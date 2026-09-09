@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { HiXMark } from "react-icons/hi2";
 
-type TCustomModal = {
+export type TCustomModal = {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;

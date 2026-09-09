@@ -191,7 +191,7 @@ const LoadPage = ({ limit, page }: TQuery) => {
                   largeColumns={5}
                   rows={6}
                 />
-              ) : !isError ?
+              ) : isError ?
                 <tr>
                   <td colSpan={5}>
                     <CustomStatus

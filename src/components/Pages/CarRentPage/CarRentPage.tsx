@@ -23,6 +23,9 @@ import CreateCarRentModal from "@/components/Dashboard/Modals/CreateCarRentModal
 import CustomDropDownMenuItem from "@/components/Reusable/CustomDropDownMenuItem";
 import UpdateCarRentModal from "@/components/Dashboard/Modals/EditModals/UpdateCarRentModal";
 import Swal from "sweetalert2";
+import CustomStatus from "@/components/Reusable/CustomStatus";
+import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
+import { SERVER_ERROR_MESSAGE } from "@/constant";
 
 export default function CarRentPage({
     limit,
@@ -32,7 +35,7 @@ export default function CarRentPage({
     const {
         data,
         isLoading,
-        isFetching,
+        isError
     } = useGetAllCarRentQuery(
         {
             limit,
@@ -100,42 +103,32 @@ export default function CarRentPage({
     };
 
     return (
-        <div className="w-full rounded-md bg-white">
+        <div className="bg-white rounded-md shadow border">
+            <div className="flex w-full p-2 items-center justify-between gap-2 sm:w-auto sm:gap-3">
+                <div className="min-w-0 flex-1 sm:w-[240px] sm:flex-none">
+                    <SearchBar
+                        value={searchItems}
+                        onChange={(e) =>
+                            setSearchItem(e.target.value)
+                        }
+                        onClear={() => setSearchItem("")}
+                    />
+                </div>
 
-            {/* Header */}
-            <div className="flex flex-col gap-3 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-                {/* Title */}
-                <h2 className="text-lg font-semibold text-[#039A63] sm:text-2xl">
-                    গাড়ি ভাড়ার তালিকা
-                </h2>
-
-                {/* Search + Button */}
-                <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
-                    <div className="min-w-0 flex-1 sm:w-[240px] sm:flex-none">
-                        <SearchBar
-                            value={searchItems}
-                            onChange={(e) =>
-                                setSearchItem(e.target.value)
-                            }
-                            onClear={() => setSearchItem("")}
-                        />
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={() => setOpenCarRent(true)}
-                        className="
+                <button
+                    type="button"
+                    onClick={() => setOpenCarRent(true)}
+                    className="
                 shrink-0 rounded-md
                 bg-[#039A63]
-                px-3 py-2
+                px-3 h-9
                 text-xs font-medium text-white
                 transition hover:bg-[#028653]
                 sm:px-4 sm:text-sm
             "
-                    >
-                        + নতুন ভাড়া
-                    </button>
-                </div>
+                >
+                    + নতুন ভাড়া
+                </button>
             </div>
 
             {/* Table */}
@@ -162,112 +155,124 @@ export default function CarRentPage({
                     {/* Table Body */}
                     <tbody className="text-center">
 
-                        {(isLoading || isFetching) ? (
-                            <tr>
-                                <td colSpan={5}>
-                                    <CustomLoader cls="h-[30vh]" />
-                                </td>
-                            </tr>
-                        ) : !carRentData?.length ? (
-                            <tr>
-                                <td
-                                    colSpan={5}
-                                    className="py-10 text-gray-500"
-                                >
-                                    কোনো ডাটা পাওয়া যায়নি
-                                </td>
-                            </tr>
-                        ) : (
-                            carRentData.map(
-                                (row: any, index: number) => (
-                                    <tr
-                                        key={row?.id}
-                                        className="h-[56px] border-b border-gray-200 transition-colors hover:bg-gray-50"
-                                    >
-                                        {/* # */}
-                                        <TableData
-                                            td={
-                                                ((page ?? 1) - 1) *
-                                                (limit ?? 10) +
-                                                index +
-                                                1
-                                            }
+                        {isLoading ? (
+                            <TableLazyLoading
+                                smallColumns={5}
+                                largeColumns={5}
+                                rows={6}
+                            />
+                        ) : isError ?
+                            (
+                                <tr>
+                                    <td colSpan={5}>
+                                        <CustomStatus
+                                            type="error"
+                                            description={SERVER_ERROR_MESSAGE}
                                         />
-
-                                        {/* ঠিকানা */}
-                                        <TableData
-                                            td={row?.address ?? "-"}
-                                        />
-
-                                        {/* এরিয়া */}
-                                        <TableData
-                                            td={row?.area ?? "-"}
-                                        />
-
-                                        {/* ভাড়া */}
-                                        <TableData
-                                            td={
-                                                row?.rent
-                                                    ? `৳ ${row.rent}`
-                                                    : row?.rate
-                                                        ? `৳ ${row.rate}`
-                                                        : "৳ ০"
-                                            }
-                                        />
-
-                                        {/* Button */}
-                                        <td className="border p-2">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <button className="rounded p-1.5 transition hover:bg-gray-100">
-                                                        <MoreVertical className="h-4 w-4 cursor-pointer text-gray-600" />
-                                                    </button>
-                                                </DropdownMenuTrigger>
-
-                                                <DropdownMenuContent
-                                                    align="end"
-                                                    className="rounded-md border bg-white shadow-md"
-                                                >
-                                                    {/* Update */}
-                                                    <DropdownMenuItem
-                                                        onClick={() => {
-                                                            setOpenUpdateCarRent(true);
-                                                            setSelectCarRenttId(
-                                                                row?.id
-                                                            );
-                                                        }}
-                                                    >
-                                                        <CustomDropDownMenuItem
-                                                            Icon={Pencil}
-                                                            title="আপডেট"
-                                                        />
-                                                    </DropdownMenuItem>
-
-                                                    {/* Delete */}
-                                                    <DropdownMenuItem
-                                                        disabled={deleteLoading}
-                                                        onClick={() =>
-                                                            handleDeleteCarRent(
-                                                                row?.id
-                                                            )
-                                                        }
-                                                    >
-                                                        <CustomDropDownMenuItem
-                                                            Icon={Trash}
-                                                            title={
-                                                                deleteLoading
-                                                                    ? "ডিলেট হচ্ছে..."
-                                                                    : "ডিলেট"
-                                                            }
-                                                        />
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </td>
-                                    </tr>
-                                )
+                                    </td>
+                                </tr>
                             )
-                        )}
+
+                            : !carRentData?.length ? (
+                                <tr>
+                                    <td colSpan={5}>
+                                        <CustomStatus
+                                            type="empty"
+                                            description="কোনো গাড়ির ভাড়া পাওয়া যায়নি"
+                                        />
+                                    </td>
+                                </tr>
+                            ) : (
+                                carRentData.map(
+                                    (row: any, index: number) => (
+                                        <tr
+                                            key={row?.id}
+                                            className="h-[56px] border-b border-gray-200 transition-colors hover:bg-gray-50"
+                                        >
+                                            {/* # */}
+                                            <TableData
+                                                td={
+                                                    ((page ?? 1) - 1) *
+                                                    (limit ?? 10) +
+                                                    index +
+                                                    1
+                                                }
+                                            />
+
+                                            {/* ঠিকানা */}
+                                            <TableData
+                                                td={row?.address ?? "-"}
+                                            />
+
+                                            {/* এরিয়া */}
+                                            <TableData
+                                                td={row?.area ?? "-"}
+                                            />
+
+                                            {/* ভাড়া */}
+                                            <TableData
+                                                td={
+                                                    row?.rent
+                                                        ? `৳ ${row.rent}`
+                                                        : row?.rate
+                                                            ? `৳ ${row.rate}`
+                                                            : "৳ ০"
+                                                }
+                                            />
+
+                                            {/* Button */}
+                                            <td className="border p-2">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <button className="rounded p-1.5 transition hover:bg-gray-100">
+                                                            <MoreVertical className="h-4 w-4 cursor-pointer text-gray-600" />
+                                                        </button>
+                                                    </DropdownMenuTrigger>
+
+                                                    <DropdownMenuContent
+                                                        align="end"
+                                                        className="rounded-md border bg-white shadow-md"
+                                                    >
+                                                        {/* Update */}
+                                                        <DropdownMenuItem
+                                                            onClick={() => {
+                                                                setOpenUpdateCarRent(true);
+                                                                setSelectCarRenttId(
+                                                                    row?.id
+                                                                );
+                                                            }}
+                                                        >
+                                                            <CustomDropDownMenuItem
+                                                                Icon={Pencil}
+                                                                title="আপডেট"
+                                                            />
+                                                        </DropdownMenuItem>
+
+                                                        {/* Delete */}
+                                                        <DropdownMenuItem
+                                                            disabled={deleteLoading}
+                                                            onClick={() =>
+                                                                handleDeleteCarRent(
+                                                                    row?.id
+                                                                )
+                                                            }
+                                                        >
+                                                            <CustomDropDownMenuItem
+                                                                Icon={Trash}
+                                                                title={
+                                                                    deleteLoading
+                                                                        ? "ডিলেট হচ্ছে..."
+                                                                        : "ডিলেট"
+                                                                }
+                                                            />
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </td>
+                                        </tr>
+                                    )
+                                )
+                            )}
 
                     </tbody>
                 </table>

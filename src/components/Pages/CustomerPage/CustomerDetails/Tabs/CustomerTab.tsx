@@ -28,6 +28,7 @@ import DeliveryHistoryPrint from "./DeliveryHistoryPrint";
 import { TDeliveryWithCustomer } from "@/interface/delivery";
 import { formatDateRange } from "@/utils/formatDateRange";
 import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
+import { useGetVataInfoQuery } from "@/redux/features/vata.features";
 
 type CustomerTab =
     | "all"
@@ -46,7 +47,7 @@ const CustomerTabs = ({
     const [invoiceInfo, setInvoiceInfo] = useState<undefined | IChallanForDataShow[]>(undefined)
     const [dueInfo, setDueInfo] = useState<undefined | TDueData[]>(undefined)
     const [deliveryInfo, setDeliveryInfo] = useState<undefined | TDeliveryWithCustomer[]>(undefined)
-
+    const { data: vata } = useGetVataInfoQuery(undefined)
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -231,6 +232,7 @@ const CustomerTabs = ({
                         formatDate={formatDate}
                         query={query}
                         setInvoiceInfo={setInvoiceInfo}
+                        vataInformation={vata}
                     />
                 )}
 

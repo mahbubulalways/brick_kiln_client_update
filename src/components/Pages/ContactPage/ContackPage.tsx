@@ -21,6 +21,9 @@ import CreateNewContactModal from "@/components/Dashboard/Modals/CreateNewContac
 import UpdateContactModal from "@/components/Dashboard/Modals/EditModals/UpdateContactModa";
 import Swal from "sweetalert2";
 import CustomLoader from "@/components/Reusable/CustomLoader";
+import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
+import CustomStatus from "@/components/Reusable/CustomStatus";
+import { SERVER_ERROR_MESSAGE } from "@/constant";
 
 
 type TContact = {
@@ -37,7 +40,7 @@ export default function ContackPage({
     page,
 }: TQuery) {
     const [searchItems, setSearchItem] = useState("");
-    const { data, isLoading } = useGetAllContactsQuery({ search, limit, page });
+    const { data, isLoading, isError } = useGetAllContactsQuery({ search, limit, page });
     const contacts: TContact[] = data?.data?.data || [];
     const meta = data?.data?.meta as TMetaConfig;
     const [openContactModal, setOpenContactModal] = useState<boolean>(false)
@@ -83,29 +86,24 @@ export default function ContackPage({
     };
 
     return (
-        <div className="rounded-lg bg-white p-3">
-            {/* Top Section */}
-            <div className="mb-3 flex items-center justify-between">
-              
-               <div className="flex-1">
-                 <button
-                    type="button"
-                    onClick={() => setOpenContactModal(true)}
-                    className="flex h-10 items-center gap-1 rounded-md bg-[#079b68] px-5 text-[16px] font-medium text-white hover:bg-[#078b5e]"
-                >
-                    নতুন নম্বর
-                    <ChevronDown size={17} />
-                </button>
-               </div>
+        <div className="bg-white rounded-md shadow border">
+            <div className="mb-3 flex items-center justify-between p-2">
+                <div className="flex-1">
+                    <button
+                        type="button"
+                        onClick={() => setOpenContactModal(true)}
+                        className="flex h-9 items-center gap-1 rounded-md bg-[#079b68] px-5 text-[16px] font-medium text-white hover:bg-[#078b5e]"
+                    >
+                        নতুন নম্বর
+                    </button>
+                </div>
 
-                {/* Search */}
-               <div className="flex-1">
-                 <SearchBar
+                <SearchBar
                     value={searchItems}
                     onChange={(e) => setSearchItem(e.target.value)}
                     onClear={() => setSearchItem("")}
                 />
-               </div>
+
             </div>
 
             {/* Reusable Table */}
@@ -124,77 +122,89 @@ export default function ContackPage({
 
                     <tbody>
                         {isLoading ? (
-                            <tr>
-                              <td colSpan={4}>
-                                 <CustomLoader cls="h-[30vh]"/>
-                              </td>
-                            </tr>
-                        ) : contacts.length > 0 ? (
-                            contacts.map(
-                                (contact, index) => (
-                                    <tr
-                                        key={contact.id}
-                                        className="border-b border-[#e8e8e8]"
-                                    >
-                                        <TableData
-                                            td={index + 1}
+                            <TableLazyLoading
+                                smallColumns={6}
+                                largeColumns={6}
+                                rows={6}
+                            />
+                        ) : isError ?
+                            (
+                                <tr>
+                                    <td colSpan={6}>
+                                        <CustomStatus
+                                            type="error"
+                                            description={SERVER_ERROR_MESSAGE}
                                         />
-
-                                        <TableData
-                                            td={contact.name}
-                                        />
-
-                                        <TableData
-                                            td={contact.address}
-                                        />
-
-                                        <TableData
-                                            td={
-                                                contact.occupation
-                                            }
-                                        />
-
-                                        <TableData
-                                            td={contact.phone}
-                                        />
-
-                                        <td className="px-3 py-3">
-                                            <div className="flex items-center justify-center gap-4">
-                                                {/* Edit */}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setOpenUpdateContactModal(true)
-                                                        setSelectedContactId(contact.id)
-                                                    }}
-                                                    className="text-[#039A63] transition-all duration-200 hover:scale-110"
-                                                >
-                                                    <Pencil size={18} strokeWidth={2} />
-                                                </button>
-
-                                                <button
-                                                    type="button"
-                                                    disabled={isDeleting}
-                                                    onClick={() => handleDelete(contact.id)}
-                                                    className="text-[#ff4d4f] transition-all duration-200 hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50"
-                                                >
-                                                    <Trash2 size={18} strokeWidth={2} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )
+                                    </td>
+                                </tr>
                             )
-                        ) : (
-                            <tr>
-                                <td
-                                    colSpan={6}
-                                    className="py-10 text-center text-gray-500"
-                                >
-                                    কোনো ফোন নম্বর পাওয়া যায়নি
-                                </td>
-                            </tr>
-                        )}
+
+                            : !contacts?.length ? (
+                                <tr>
+                                    <td colSpan={6}>
+                                        <CustomStatus
+                                            type="empty"
+                                            description="কোনো ফোন নম্বর পাওয়া যায়নি"
+                                        />
+                                    </td>
+                                </tr>
+                            ) :
+                                contacts.map(
+                                    (contact, index) => (
+                                        <tr
+                                            key={contact.id}
+                                            className="border-b border-[#e8e8e8]"
+                                        >
+                                            <TableData
+                                                td={index + 1}
+                                            />
+
+                                            <TableData
+                                                td={contact.name}
+                                            />
+
+                                            <TableData
+                                                td={contact.address}
+                                            />
+
+                                            <TableData
+                                                td={
+                                                    contact.occupation
+                                                }
+                                            />
+
+                                            <TableData
+                                                td={contact.phone}
+                                            />
+
+                                            <td className="px-3 py-3">
+                                                <div className="flex items-center justify-center gap-4">
+                                                    {/* Edit */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setOpenUpdateContactModal(true)
+                                                            setSelectedContactId(contact.id)
+                                                        }}
+                                                        className="text-[#039A63] transition-all duration-200 hover:scale-110"
+                                                    >
+                                                        <Pencil size={18} strokeWidth={2} />
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        disabled={isDeleting}
+                                                        onClick={() => handleDelete(contact.id)}
+                                                        className="text-[#ff4d4f] transition-all duration-200 hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    >
+                                                        <Trash2 size={18} strokeWidth={2} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )
+                                )
+                        }
                     </tbody>
                 </table>
             </div>

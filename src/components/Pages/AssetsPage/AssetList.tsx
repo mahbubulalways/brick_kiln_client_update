@@ -20,6 +20,9 @@ import CalculateAssets from "./CalculateAssets";
 import Swal from "sweetalert2";
 import ImageViewModal from "@/components/Dashboard/common/ImageViewModal";
 import SingleGoodDetailsModal from "@/components/Dashboard/Modals/ReportModal/SingleGoodDetailsModal/SingleGoodDetailsModal";
+import CustomStatus from "@/components/Reusable/CustomStatus";
+import { SERVER_ERROR_MESSAGE } from "@/constant";
+import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
 
 export default function AssetList() {
     const { data, isError, isLoading } =
@@ -246,14 +249,14 @@ export default function AssetList() {
                 </div>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-gray-100 bg-white">
-                <div className="overflow-x-auto">
-                    <table className="w-full min-w-[1200px] border-collapse">
+            <div >
+                <div className="overflow-x-auto mt-2  ">
+                    <table className="min-w-full border-collapse ">
                         <thead>
-                            <tr className="bg-[#039A63] text-center text-white">
+                            <tr className="bg-[#039A63] text-white text-center">
                                 <TableHead
                                     th="ছবি"
-                                    cls="w-[80px]"
+
                                 />
 
                                 <TableHead
@@ -283,189 +286,198 @@ export default function AssetList() {
 
                         <tbody className="text-center">
                             {isLoading ? (
-                                <tr>
-                                    <td
-                                        colSpan={11}
-                                        className="py-10"
-                                    >
-                                        <CustomLoader cls="h-[20vh]" />
-                                    </td>
-                                </tr>
-                            ) : isError ? (
-                                <tr>
-                                    <td
-                                        colSpan={11}
-                                        className="py-8 text-sm text-red-500"
-                                    >
-                                        তথ্য লোড করতে সমস্যা হয়েছে।
-                                    </td>
-                                </tr>
-                            ) : !filteredGoods.length ? (
-                                <tr>
-                                    <td
-                                        colSpan={11}
-                                        className="py-8 text-sm text-gray-500"
-                                    >
-                                        কোনো তথ্য পাওয়া যায়নি।
-                                    </td>
-                                </tr>
-                            ) : (
-                                paginatedGoods.map((item) => {
-                                    const total = Number(
-                                        item.quantity || 0
-                                    );
+                                <TableLazyLoading
+                                    smallColumns={6}
+                                    largeColumns={11}
+                                    rows={6}
+                                />
+                            ) : isError ?
+                                (
+                                    <tr>
+                                        <td colSpan={11}>
+                                            <CustomStatus
+                                                type="error"
+                                                description={SERVER_ERROR_MESSAGE}
+                                            />
+                                        </td>
+                                    </tr>
+                                )
 
-                                    const issue = Number(
-                                        item.totalIssue || 0
-                                    );
-
-                                    const damage = Number(
-                                        item.totalDamage || 0
-                                    );
-
-                                    const lost = Number(
-                                        item.totalLost || 0
-                                    );
-
-                                    const current =
-                                        total -
-                                        issue -
-                                        damage -
-                                        lost;
-
-                                    const itemTotalPrice =
-                                        Number(item.price || 0) *
-                                        total;
-
-                                    return (
-                                        <tr
-                                            key={item.id}
-                                            className="border-b border-gray-200 transition-colors last:border-b-0 hover:bg-gray-50"
+                                : !filteredGoods?.length ? (
+                                    <tr>
+                                        <td colSpan={11}>
+                                            <CustomStatus
+                                                type="empty"
+                                                description="কোনো অ্যাসেট পাওয়া যায়নি"
+                                            />
+                                        </td>
+                                    </tr>
+                                ) : !filteredGoods.length ? (
+                                    <tr>
+                                        <td
+                                            colSpan={11}
+                                            className="py-8 text-sm text-gray-500"
                                         >
-                                            <td className="w-[80px] border-r border-gray-200 px-3 py-3">
-                                                <div className="flex items-center justify-center">
-                                                    {item.image ? (
-                                                        <div
-                                                            onClick={() => {
-                                                                setImage(item.image);
-                                                                setImageModal(true);
-                                                            }}
-                                                            className="relative cursor-pointer h-10 w-10 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
-                                                            <Image
-                                                                fill
-                                                                unoptimized
-                                                                src={`${process.env.NEXT_PUBLIC_BACKEND_API}/uploads/${item.image}`}
-                                                                alt={
-                                                                    item.name ||
-                                                                    "product"
-                                                                }
-                                                                className="object-cover"
-                                                            />
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50">
-                                                            <span className="text-xs text-gray-400">
-                                                                ছবি নেই
-                                                            </span>
-                                                        </div>
+                                            কোনো তথ্য পাওয়া যায়নি।
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    paginatedGoods.map((item) => {
+                                        const total = Number(
+                                            item.quantity || 0
+                                        );
+
+                                        const issue = Number(
+                                            item.totalIssue || 0
+                                        );
+
+                                        const damage = Number(
+                                            item.totalDamage || 0
+                                        );
+
+                                        const lost = Number(
+                                            item.totalLost || 0
+                                        );
+
+                                        const current =
+                                            total -
+                                            issue -
+                                            damage -
+                                            lost;
+
+                                        const itemTotalPrice =
+                                            Number(item.price || 0) *
+                                            total;
+
+                                        return (
+                                            <tr
+                                                key={item.id}
+                                                className="border-b border-gray-200 transition-colors last:border-b-0 hover:bg-gray-50"
+                                            >
+                                                <td className="w-[80px] border-r border-gray-200 px-3 py-3">
+                                                    <div className="flex items-center justify-center">
+                                                        {item.image ? (
+                                                            <div
+                                                                onClick={() => {
+                                                                    setImage(item.image);
+                                                                    setImageModal(true);
+                                                                }}
+                                                                className="relative cursor-pointer h-10 w-10 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+                                                                <Image
+                                                                    fill
+                                                                    unoptimized
+                                                                    src={`${process.env.NEXT_PUBLIC_BACKEND_API}/uploads/${item.image}`}
+                                                                    alt={
+                                                                        item.name ||
+                                                                        "product"
+                                                                    }
+                                                                    className="object-cover"
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex h-10 w-10 items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50">
+                                                                <span className="text-xs text-gray-400">
+                                                                    ছবি নেই
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
+
+                                                <TableData
+                                                    td={
+                                                        item.name || "-"
+                                                    }
+                                                    cls="border-r border-gray-200 text-left font-medium"
+                                                />
+
+                                                <TableData
+                                                    td={
+                                                        item.category
+                                                            ?.name || "-"
+                                                    }
+                                                    cls="border-r border-gray-200 text-left"
+                                                />
+
+                                                <TableData
+                                                    td={toBanglaNumber(
+                                                        total
                                                     )}
-                                                </div>
-                                            </td>
+                                                    cls="border-r border-gray-200 font-medium"
+                                                />
 
-                                            <TableData
-                                                td={
-                                                    item.name || "-"
-                                                }
-                                                cls="border-r border-gray-200 text-left font-medium"
-                                            />
+                                                <TableData
+                                                    td={toBanglaNumber(
+                                                        current
+                                                    )}
+                                                    cls="border-r border-gray-200 font-medium text-green-600"
+                                                />
 
-                                            <TableData
-                                                td={
-                                                    item.category
-                                                        ?.name || "-"
-                                                }
-                                                cls="border-r border-gray-200 text-left"
-                                            />
+                                                <TableData
+                                                    td={toBanglaNumber(
+                                                        issue
+                                                    )}
+                                                    cls="border-r border-gray-200 font-medium text-blue-600"
+                                                />
 
-                                            <TableData
-                                                td={toBanglaNumber(
-                                                    total
-                                                )}
-                                                cls="border-r border-gray-200 font-medium"
-                                            />
+                                                <TableData
+                                                    td={toBanglaNumber(
+                                                        damage
+                                                    )}
+                                                    cls="border-r border-gray-200 font-medium text-orange-500"
+                                                />
 
-                                            <TableData
-                                                td={toBanglaNumber(
-                                                    current
-                                                )}
-                                                cls="border-r border-gray-200 font-medium text-green-600"
-                                            />
+                                                <TableData
+                                                    td={toBanglaNumber(
+                                                        lost
+                                                    )}
+                                                    cls="border-r border-gray-200 font-medium text-red-500"
+                                                />
 
-                                            <TableData
-                                                td={toBanglaNumber(
-                                                    issue
-                                                )}
-                                                cls="border-r border-gray-200 font-medium text-blue-600"
-                                            />
+                                                <TableData
+                                                    td={toBanglaNumber(
+                                                        item.price
+                                                    )}
+                                                    cls="border-r border-gray-200"
+                                                />
 
-                                            <TableData
-                                                td={toBanglaNumber(
-                                                    damage
-                                                )}
-                                                cls="border-r border-gray-200 font-medium text-orange-500"
-                                            />
+                                                <TableData
+                                                    td={toBanglaNumber(
+                                                        itemTotalPrice
+                                                    )}
+                                                    cls="border-r border-gray-200 font-medium"
+                                                />
 
-                                            <TableData
-                                                td={toBanglaNumber(
-                                                    lost
-                                                )}
-                                                cls="border-r border-gray-200 font-medium text-red-500"
-                                            />
+                                                <td className="w-[110px] border-r border-gray-200 px-3 py-3">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button
+                                                            onClick={() => handleOpenGoodDetails(item.id)}
+                                                            type="button"
+                                                            title="বিস্তারিত দেখুন"
+                                                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-600 transition hover:border-[#039A63] hover:bg-green-50 hover:text-[#039A63]"
+                                                        >
+                                                            <Eye
+                                                                size={15}
+                                                            />
+                                                        </button>
 
-                                            <TableData
-                                                td={toBanglaNumber(
-                                                    item.price
-                                                )}
-                                                cls="border-r border-gray-200"
-                                            />
-
-                                            <TableData
-                                                td={toBanglaNumber(
-                                                    itemTotalPrice
-                                                )}
-                                                cls="border-r border-gray-200 font-medium"
-                                            />
-
-                                            <td className="w-[110px] border-r border-gray-200 px-3 py-3">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <button
-                                                        onClick={() => handleOpenGoodDetails(item.id)}
-                                                        type="button"
-                                                        title="বিস্তারিত দেখুন"
-                                                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-600 transition hover:border-[#039A63] hover:bg-green-50 hover:text-[#039A63]"
-                                                    >
-                                                        <Eye
-                                                            size={15}
-                                                        />
-                                                    </button>
-
-                                                    <button
-                                                        disabled={deleteLoading}
-                                                        onClick={() => handleDeleteGood(item?.id)}
-                                                        type="button"
-                                                        title="ডিলিট"
-                                                        className="flex cursor-pointer h-8 w-8 shrink-0 items-center justify-center rounded-md border border-red-200 bg-white text-red-500 transition hover:bg-red-50"
-                                                    >
-                                                        <Trash2
-                                                            size={15}
-                                                        />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
+                                                        <button
+                                                            disabled={deleteLoading}
+                                                            onClick={() => handleDeleteGood(item?.id)}
+                                                            type="button"
+                                                            title="ডিলিট"
+                                                            className="flex cursor-pointer h-8 w-8 shrink-0 items-center justify-center rounded-md border border-red-200 bg-white text-red-500 transition hover:bg-red-50"
+                                                        >
+                                                            <Trash2
+                                                                size={15}
+                                                            />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
                         </tbody>
                     </table>
                 </div>

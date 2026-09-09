@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Pencil, Trash } from "lucide-react";
+import { MoreVertical, Pencil, Printer, Trash } from "lucide-react";
 import CustomNewButton from "@/components/Reusable/CustomNewButton";
 import CustomReportButton from "@/components/Reusable/CustomReportButton";
 import NewPaymentModal from "@/components/Dashboard/Modals/NewPaymentModal";
@@ -31,13 +31,13 @@ import CustomPrintButton from "@/components/Reusable/CustomPrintButton";
 import PaymentReportModal from "@/components/Dashboard/Modals/PaymentReportModal";
 import UpdatePaymentModal from "@/components/Dashboard/Modals/EditModals/UpdatePaymentModal";
 import Swal from "sweetalert2";
-import CustomLoader from "@/components/Reusable/CustomLoader";
 import CommonPrint, { TCommonPrintRef } from "@/components/Reusable/CommonPrint";
 import PaymentPrint from "@/components/PrintComponent/PaymentPrint";
 import { useGetVataInfoQuery } from "@/redux/features/vata.features";
 import { formatDateRange } from "@/utils/formatDateRange";
 import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
 import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
+import LedgerPrintModal from "@/components/Dashboard/PrintModal/LedgerPrint/LedgerPrintModal";
 
 const PaymentPage = ({ limit, page, search }: TQuery) => {
   const [searchItems, setSearchItem] = useState("");
@@ -45,6 +45,7 @@ const PaymentPage = ({ limit, page, search }: TQuery) => {
   const [isReportModalOpen, setReportModalOpen] = useState<boolean>(false);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
+  const [openLedgerPrint, setOpeLedgerPrint] = useState<boolean>(false);
   const [selectedPaymentId, setSelectedPaymentId] = useState<number | null>(null);
   const [filterDate, setDateFiter] = useState<{
     startDate: Date | null,
@@ -315,6 +316,19 @@ const PaymentPage = ({ limit, page, search }: TQuery) => {
                               title="আপডেট"
                             />
                           </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setOpeLedgerPrint(true);
+                              setSelectedPaymentId(row?.id);
+                            }}
+                          >
+                            <CustomDropDownMenuItem
+                              Icon={Printer}
+                              title="প্রিন্ট খতিয়ান"
+                            />
+                          </DropdownMenuItem>
+
                           <DropdownMenuItem
                           >
                             <Link href={`/dashboard/ledger/details/${row?.ledger?.id}`}>
@@ -410,7 +424,11 @@ const PaymentPage = ({ limit, page, search }: TQuery) => {
       )}
 
       {isUpdateModalOpen &&
-        <UpdatePaymentModal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} id={selectedPaymentId} setId={setSelectedPaymentId} />
+        <UpdatePaymentModal
+          isOpen={isUpdateModalOpen}
+          onClose={() => setIsUpdateModalOpen(false)}
+          id={selectedPaymentId}
+          setId={setSelectedPaymentId} />
       }
 
 
@@ -423,6 +441,16 @@ const PaymentPage = ({ limit, page, search }: TQuery) => {
           vataInformation={vata?.data}
         />
       </CommonPrint>
+      {
+
+      }{
+        openLedgerPrint &&
+        <LedgerPrintModal
+          ledgerId={String(selectedPaymentId)}
+          isOpen={openLedgerPrint}
+          onClose={() => setOpeLedgerPrint(false)} />
+      }
+
     </div>
   );
 };

@@ -19,7 +19,7 @@ const ChalanDetailsModal = ({
   const { data, isLoading, isError } = useGetSingleInvoiceQuery(invoiceId, {
     refetchOnMountOrArgChange: true,
   });
-  const {data:vata, isLoading:vataLoading, isError:vataError,error}=useGetVataInfoQuery(undefined)
+  const { data: vata, isLoading: vataLoading, isError: vataError, error } = useGetVataInfoQuery(undefined)
 
   const handleClose = () => {
     setInvoiceId(0);
@@ -36,9 +36,9 @@ const ChalanDetailsModal = ({
       title="চালান এর বিস্তারিত"
       width="xxl"
     >
-      {isLoading||vataLoading ? (
+      {isLoading || vataLoading ? (
         <CustomStatus type="loading" />
-      ) : isError||vataError ?
+      ) : isError || vataError ?
         <CustomStatus type="error" />
         : !invoice ?
           <CustomStatus type="empty" /> : (
@@ -78,34 +78,34 @@ const ChalanDetailsModal = ({
                     {invoice?.customer?.phoneNumber}
                   </p>
                 </div>
-                 <div className="border rounded-md p-3">
+                <div className="border rounded-md p-3">
                   <p>
                     <span className=""> চালান তারিখ:</span>{" "}
-                    
-                       {formatBanglaDate({date:invoice?.challanDate})}
+
+                    {formatBanglaDate({ date: invoice?.challanDate })}
                   </p>
                   <p>
                     <span className="">সময়: </span>
-                     {formatBanglaDate({date:invoice?.challanDate,showDate:false,showTime:true})}
+                    {formatBanglaDate({ date: invoice?.challanDate, showDate: false, showTime: true })}
                   </p>
                   <p>
                     <span className=""> চালান সিজন:</span> {invoice?.season?.name}
                   </p>
-                  
+
                 </div>
                 <div className="border rounded-md p-3">
                   <p>
                     <span className="">ধরণ:</span> {invoice?.chalanType}
                   </p>
                   {
-                   invoice?.deliverySeason && <p>
-                    <span className="">ডেলিভারি সিজন:</span> {invoice?.deliverySeason}
-                  </p>
+                    invoice?.deliverySeason && <p>
+                      <span className="">ডেলিভারি সিজন:</span> {invoice?.deliverySeason}
+                    </p>
                   }
-                 
+
                   <p>
                     <span className="">ডেলিভারি তারিখ:</span>{" "}
-                    {formatBanglaDate({date:invoice?.deliveryDate})}
+                    {formatBanglaDate({ date: invoice?.deliveryDate })}
                   </p>
                 </div>
               </div>
@@ -127,7 +127,7 @@ const ChalanDetailsModal = ({
                       <tr key={item?.id}>
                         <td className="border-r p-2">{item?.class}</td>
                         <td className="border-r p-2">{item?.quantity}</td>
-                        <td className="border-r p-2">০</td>
+                        <td className="border-r p-2">{item.delivered}</td>
                         <td className="border-r p-2">৳ {item?.rate}</td>
                         <td className="p-2">৳ {item?.price}</td>
                       </tr>

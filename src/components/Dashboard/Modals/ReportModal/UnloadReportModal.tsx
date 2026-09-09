@@ -23,7 +23,6 @@ const UnloadReportModal = ({
     onClose,
     classes = [],
 }: TUploadReporty) => {
-
     const [activeTab, setActiveTab] = useState<
         "quantity" | "percentage" | "brick"
     >("quantity");
@@ -51,9 +50,29 @@ const UnloadReportModal = ({
         skip: !isOpen,
     });
 
-    const reportData = data?.data as TUnloadResponse[];
-    const totalColumns =
-        classes?.length + 4;
+    const reportData = (data?.data ?? []) as TUnloadResponse[];
+
+    const totalColumns = classes.length + 4;
+
+    const getClassQuantity = (
+        row: TUnloadResponse,
+        classId: string | number
+    ) => {
+        const classData = row.items?.find(
+            (item) => String(item.class?.id) === String(classId)
+        );
+
+        return Number(classData?.quantity ?? 0);
+    };
+
+    const getRowTotal = (row: TUnloadResponse) => {
+        return (
+            row.items?.reduce(
+                (sum, item) => sum + Number(item.quantity ?? 0),
+                0
+            ) ?? 0
+        );
+    };
 
     const getPercentage = (quantity: number, total: number) => {
         if (!total || !quantity) return 0;
@@ -61,16 +80,13 @@ const UnloadReportModal = ({
         return (quantity / total) * 100;
     };
 
-
     const renderQuantityReport = () => {
-        const classTotals = classes.reduce<Record<number, number>>(
+        const classTotals = classes.reduce<Record<string, number>>(
             (acc, classItem) => {
-                acc[classItem?.id!] = reportData.reduce((sum, row) => {
-                    const classData = row.items?.find(
-                        (item) => item.classId === classItem.id
-                    );
+                const classId = String(classItem.id);
 
-                    return sum + Number(classData?.quantity ?? 0);
+                acc[classId] = reportData.reduce((sum, row) => {
+                    return sum + getClassQuantity(row, classItem.id!);
                 }, 0);
 
                 return acc;
@@ -78,20 +94,14 @@ const UnloadReportModal = ({
             {}
         );
 
-        const grandTotal = reportData.reduce((sum, row) => {
-            return (
-                sum +
-                (row.items?.reduce(
-                    (itemSum, item) =>
-                        itemSum + Number(item.quantity ?? 0),
-                    0
-                ) ?? 0)
-            );
-        }, 0);
+        const grandTotal = reportData.reduce(
+            (sum, row) => sum + getRowTotal(row),
+            0
+        );
 
         return (
             <div className="w-full overflow-x-auto">
-                <table className="min-w-full text-center border-t">
+                <table className="min-w-full border-t text-center">
                     <thead className="bg-[#039A63] text-white">
                         <tr>
                             <TableHead th="তারিখ" />
@@ -101,10 +111,10 @@ const UnloadReportModal = ({
                                 cls="hidden lg:table-cell"
                             />
 
-                            {classes?.map((ft: TClassAndRate) => (
+                            {classes.map((classItem) => (
                                 <TableHead
-                                    key={ft.id}
-                                    th={ft.className}
+                                    key={classItem.id}
+                                    th={classItem.className}
                                 />
                             ))}
 
@@ -130,7 +140,7 @@ const UnloadReportModal = ({
                                     {SERVER_ERROR_MESSAGE}
                                 </td>
                             </tr>
-                        ) : !reportData?.length ? (
+                        ) : !reportData.length ? (
                             <tr>
                                 <td
                                     colSpan={totalColumns}
@@ -142,18 +152,12 @@ const UnloadReportModal = ({
                             </tr>
                         ) : (
                             <>
-                                {reportData.map((row) => {
-                                    const total =
-                                        row.items?.reduce(
-                                            (sum, item) =>
-                                                sum +
-                                                Number(item.quantity ?? 0),
-                                            0
-                                        ) ?? 0;
+                                {reportData.map((row, idx) => {
+                                    const total = getRowTotal(row);
 
                                     return (
                                         <tr
-                                            key={row.id}
+                                            key={idx}
                                             className="hover:bg-gray-50"
                                         >
                                             <TableData
@@ -171,34 +175,28 @@ const UnloadReportModal = ({
                                                 cls="hidden lg:table-cell"
                                             />
 
-                                            {classes?.map(
-                                                (ft: TClassAndRate) => {
-                                                    const classData =
-                                                        row.items?.find(
-                                                            (item) =>
-                                                                item.classId ===
-                                                                ft.id
-                                                        );
-
-                                                    return (
-                                                        <TableData
-                                                            key={ft.id}
-                                                            td={toBanglaNumber(
-                                                                Number(
-                                                                    classData?.quantity ??
-                                                                    0
-                                                                )
-                                                            )}
-                                                        />
+                                            {classes.map((classItem) => {
+                                                const quantity =
+                                                    getClassQuantity(
+                                                        row,
+                                                        classItem.id!
                                                     );
-                                                }
-                                            )}
+
+                                                return (
+                                                    <TableData
+                                                        key={classItem.id}
+                                                        td={toBanglaNumber(
+                                                            quantity
+                                                        )}
+                                                    />
+                                                );
+                                            })}
 
                                             <TableData
                                                 td={toBanglaNumber(total)}
                                             />
 
-                                            <td></td>
+                                            <td className="border px-3 py-2"></td>
                                         </tr>
                                     );
                                 })}
@@ -211,16 +209,16 @@ const UnloadReportModal = ({
                                         cls="hidden lg:table-cell"
                                     />
 
-                                    {classes.map(
-                                        (classItem: TClassAndRate) => (
-                                            <TableData
-                                                key={classItem.id}
-                                                td={toBanglaNumber(
-                                                    classTotals[classItem?.id!] ?? 0
-                                                )}
-                                            />
-                                        )
-                                    )}
+                                    {classes.map((classItem) => (
+                                        <TableData
+                                            key={classItem.id}
+                                            td={toBanglaNumber(
+                                                classTotals[
+                                                String(classItem.id)
+                                                ] ?? 0
+                                            )}
+                                        />
+                                    ))}
 
                                     <TableData
                                         td={toBanglaNumber(grandTotal)}
@@ -236,94 +234,72 @@ const UnloadReportModal = ({
         );
     };
 
-
     const renderPercentageReport = () => {
-        const getRowTotal = (row: TUnloadResponse) => {
-            return (
-                row.items?.reduce(
-                    (sum, item) => sum + Number(item.quantity ?? 0),
-                    0
-                ) ?? 0
-            );
-        };
-
         const grandTotal = reportData.reduce(
             (total, row) => total + getRowTotal(row),
             0
         );
 
-        const getClassTotal = (classId: number) => {
+        const getClassTotal = (classId: string | number) => {
             return reportData.reduce((total, row) => {
-                const item = row.items?.find(
-                    (item) => item.classId === classId
-                );
-
-                return total + Number(item?.quantity ?? 0);
+                return total + getClassQuantity(row, classId);
             }, 0);
-        };
-
-        const getPercentage = (quantity: number, total: number) => {
-            if (!total || !quantity) return 0;
-            return (quantity / total) * 100;
         };
 
         return (
             <div className="w-full overflow-x-auto">
-                <table className="min-w-full text-center border-collapse text-[14px]">
+                <table className="min-w-full border-collapse text-center text-[14px]">
                     <thead className="bg-[#039A63] text-white">
                         <tr>
-                            <th className="border border-white/20 px-3 py-2 whitespace-nowrap">
+                            <th className="whitespace-nowrap border border-white/20 px-3 py-2">
                                 রাউন্ড
                             </th>
 
                             {classes.map((classItem) => (
                                 <th
                                     key={classItem.id}
-                                    className="border border-white/20 px-3 py-2 whitespace-nowrap"
+                                    className="whitespace-nowrap border border-white/20 px-3 py-2"
                                 >
                                     {classItem.className}
                                 </th>
                             ))}
 
-                            <th className="border border-white/20 px-3 py-2 whitespace-nowrap">
+                            <th className="whitespace-nowrap border border-white/20 px-3 py-2">
                                 মোট ইট
                             </th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        {reportData.map((row) => {
+                        {reportData.map((row, idx) => {
                             const rowTotal = getRowTotal(row);
 
                             return (
                                 <tr
-                                    key={row.id}
-                                    className="hover:bg-gray-50 transition"
+                                    key={idx}
+                                    className="transition hover:bg-gray-50"
                                 >
-                                    <td className="border px-3 py-2 font-medium whitespace-nowrap">
+                                    <td className="whitespace-nowrap border px-3 py-2 font-medium">
                                         {row.round?.name || "-"}
                                     </td>
 
                                     {classes.map((classItem) => {
-                                        const classData =
-                                            row.items?.find(
-                                                (item) =>
-                                                    item.classId === classItem.id
+                                        const quantity =
+                                            getClassQuantity(
+                                                row,
+                                                classItem.id!
                                             );
 
-                                        const quantity = Number(
-                                            classData?.quantity ?? 0
-                                        );
-
-                                        const percentage = getPercentage(
-                                            quantity,
-                                            rowTotal
-                                        );
+                                        const percentage =
+                                            getPercentage(
+                                                quantity,
+                                                rowTotal
+                                            );
 
                                         return (
                                             <td
                                                 key={classItem.id}
-                                                className="border px-3 py-2 whitespace-nowrap"
+                                                className="whitespace-nowrap border px-3 py-2"
                                             >
                                                 {toBanglaNumber(
                                                     percentage.toFixed(2)
@@ -333,30 +309,37 @@ const UnloadReportModal = ({
                                         );
                                     })}
 
-                                    <td className="border px-3 py-2 font-semibold text-[#FF480D] whitespace-nowrap">
-                                        {toBanglaNumber("100.00")}%
+                                    <td className="whitespace-nowrap border px-3 py-2 font-semibold text-[#FF480D]">
+                                        {rowTotal > 0
+                                            ? `${toBanglaNumber(
+                                                "100.00"
+                                            )}%`
+                                            : "০.০০%"}
                                     </td>
                                 </tr>
                             );
                         })}
 
-                        <tr className="font-bold text-[#FF480D] bg-orange-50">
+                        <tr className="bg-orange-50 font-bold text-[#FF480D]">
                             <td className="border px-3 py-2">
                                 মোট
                             </td>
 
                             {classes.map((classItem) => {
-                                const classTotal = getClassTotal(classItem?.id!);
+                                const classTotal = getClassTotal(
+                                    classItem.id!
+                                );
 
                                 const percentage =
                                     grandTotal > 0
-                                        ? (classTotal / grandTotal) * 100
+                                        ? (classTotal / grandTotal) *
+                                        100
                                         : 0;
 
                                 return (
                                     <td
                                         key={classItem.id}
-                                        className="border px-3 py-2 whitespace-nowrap"
+                                        className="whitespace-nowrap border px-3 py-2"
                                     >
                                         {toBanglaNumber(
                                             percentage.toFixed(2)
@@ -366,7 +349,7 @@ const UnloadReportModal = ({
                                 );
                             })}
 
-                            <td className="border px-3 py-2 whitespace-nowrap">
+                            <td className="whitespace-nowrap border px-3 py-2">
                                 {grandTotal > 0
                                     ? `${toBanglaNumber("100.00")}%`
                                     : "০.০০%"}
@@ -378,25 +361,25 @@ const UnloadReportModal = ({
         );
     };
 
-
-
     const renderBrickReport = () => {
         const getRowData = (row: TUnloadResponse) => {
-            const brick = row.items?.reduce(
-                (sum, item) =>
-                    item.class?.classType === "ইট"
-                        ? sum + Number(item.quantity ?? 0)
-                        : sum,
-                0
-            ) ?? 0;
+            const brick =
+                row.items?.reduce(
+                    (sum, item) =>
+                        item.class?.classType === "ইট"
+                            ? sum + Number(item.quantity ?? 0)
+                            : sum,
+                    0
+                ) ?? 0;
 
-            const adhar = row.items?.reduce(
-                (sum, item) =>
-                    item.class?.classType === "আধলা"
-                        ? sum + Number(item.quantity ?? 0)
-                        : sum,
-                0
-            ) ?? 0;
+            const adhar =
+                row.items?.reduce(
+                    (sum, item) =>
+                        item.class?.classType === "আধলা"
+                            ? sum + Number(item.quantity ?? 0)
+                            : sum,
+                    0
+                ) ?? 0;
 
             const total = brick + adhar;
 
@@ -439,7 +422,7 @@ const UnloadReportModal = ({
 
         return (
             <div className="w-full overflow-x-auto">
-                <table className="min-w-full text-center border-collapse">
+                <table className="min-w-full border-collapse text-center">
                     <thead className="bg-[#039A63] text-white">
                         <tr>
                             <th className="border border-white/20 px-3 py-2">
@@ -469,7 +452,7 @@ const UnloadReportModal = ({
                     </thead>
 
                     <tbody>
-                        {reportData.map((row) => {
+                        {reportData.map((row, idx) => {
                             const {
                                 brick,
                                 adhar,
@@ -480,10 +463,10 @@ const UnloadReportModal = ({
 
                             return (
                                 <tr
-                                    key={row.id}
+                                    key={idx}
                                     className="hover:bg-gray-50"
                                 >
-                                    <td className="border px-3 py-2 font-medium whitespace-nowrap">
+                                    <td className="whitespace-nowrap border px-3 py-2 font-medium">
                                         {row.round?.name || "-"}
                                     </td>
 
@@ -522,7 +505,7 @@ const UnloadReportModal = ({
                             );
                         })}
 
-                        <tr className="font-bold text-[#FF480D] bg-orange-50">
+                        <tr className="bg-orange-50 font-bold text-[#FF480D]">
                             <td className="border px-3 py-2">
                                 মোট
                             </td>
@@ -565,7 +548,6 @@ const UnloadReportModal = ({
         );
     };
 
-
     return (
         <CustomModal
             isOpen={isOpen}
@@ -574,10 +556,9 @@ const UnloadReportModal = ({
             width="full"
         >
             <div className="w-full">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-5">
+                <div className="mb-5 grid grid-cols-1 gap-2 md:grid-cols-3">
                     {tabs.map((tab) => {
-                        const isActive =
-                            activeTab === tab.id;
+                        const isActive = activeTab === tab.id;
 
                         return (
                             <button
@@ -587,21 +568,21 @@ const UnloadReportModal = ({
                                     setActiveTab(tab.id)
                                 }
                                 className={`
-                  w-full
-                  border
-                  border-[#039A63]
-                  rounded-[7px]
-                  py-2
-                  px-3
-                  text-[15px]
-                  font-medium
-                  transition-all
-                  duration-300
-                  ${isActive
+                                    w-full
+                                    rounded-[7px]
+                                    border
+                                    border-[#039A63]
+                                    px-3
+                                    py-2
+                                    text-[15px]
+                                    font-medium
+                                    transition-all
+                                    duration-300
+                                    ${isActive
                                         ? "bg-[#039A63] text-white shadow-sm"
                                         : "bg-white text-[#039A63] hover:bg-[#039A63] hover:text-white"
                                     }
-                `}
+                                `}
                             >
                                 {tab.title}
                             </button>
@@ -639,15 +620,13 @@ const UnloadReportModal = ({
                     !isError &&
                     reportData.length > 0 &&
                     activeTab === "percentage" &&
-                    renderPercentageReport()
-                }
+                    renderPercentageReport()}
 
                 {!isLoading &&
                     !isError &&
                     reportData.length > 0 &&
                     activeTab === "brick" &&
-                    renderBrickReport()
-                }
+                    renderBrickReport()}
             </div>
         </CustomModal>
     );

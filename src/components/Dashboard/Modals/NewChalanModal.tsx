@@ -112,16 +112,16 @@ const NewChalanModal = ({ isOpen, onClose }: TCustomModal) => {
     (acc, current) => acc + Number(current.price),
     0,
   );
-  const totalPrice = totalProductPrice + Number(carRent) - Number(discount);
-  const safeCash = Math.min(cash, totalPrice);
-  const due = totalPrice - safeCash;
+  const totalPrice =
+    totalProductPrice + Number(carRent || 0) - Number(discount || 0);
+
+  const due = totalPrice - Number(cash || 0);
 
   // HANDLE CALCULATIONS
   useEffect(() => {
-    const safeDue = Math.max(due, 0);
     setValue("invoice.productPrice", totalProductPrice);
     setValue("invoice.totalPrice", totalPrice);
-    setValue("invoice.due", safeDue);
+    setValue("invoice.due", due);
   }, [due, setValue, totalPrice, totalProductPrice]);
 
   // MIN MAX DATE OF CHALLANS
@@ -158,10 +158,22 @@ const NewChalanModal = ({ isOpen, onClose }: TCustomModal) => {
     data.invoice.discount = Number(data.invoice.discount);
     data.invoice.totalPrice = Number(data.invoice.totalPrice);
     data.invoice.due = Number(data.invoice.due);
+
+
+    if (data.invoice.due < 0) {
+      return showToast({
+        title: "মোট টাকার চেয়ে বেশি টাকা দেওয়া হয়েছে",
+        type: "error",
+        options: {
+          duration: 4000,
+          icon: <RiErrorWarningFill className="h-5 w-5" />,
+        },
+      });
+    }
     if (data.invoice.due && !duePayDate) {
       return showToast({
         title: "বাকি পরিশোধের তারিখ সেট করুন",
-        type: "info",
+        type: "error",
         options: {
           duration: 4000,
           icon: <RiErrorWarningFill className="h-5 w-5" />,
@@ -533,6 +545,7 @@ const NewChalanModal = ({ isOpen, onClose }: TCustomModal) => {
                           <p className="text-sm font-semibold text-orange-600">
                             বাকি পরিশোধের তারিখ
                           </p>
+
                           <p className="mt-1 text-xs text-gray-500">
                             কাস্টমার কখন বাকি পরিশোধ করবে সেই তারিখ নির্বাচন করুন
                           </p>
@@ -544,16 +557,41 @@ const NewChalanModal = ({ isOpen, onClose }: TCustomModal) => {
                           onChange={setDuepayDate}
                         />
                       </div>
+                    ) : due < 0 ? (
+                      <div className="rounded-xl border border-blue-100 bg-blue-50 p-1">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center 
+                          rounded-full bg-white">
+                            X
+                          </div>
+
+                          <div>
+                            <p className="text-sm font-semibold text-red-700">
+                              অতিরিক্ত টাকা প্রদান করা হয়েছে
+                            </p>
+
+                            <p className="mt-1 text-xs text-red-600">
+                              কাস্টমার মোট মূল্যের চেয়ে{" "}
+                              <span className="font-semibold">
+                                ৳ {Math.abs(due).toLocaleString("bn-BD")}
+                              </span>{" "}
+                              বেশি টাকা দিয়েছেন
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     ) : (
                       <div className="rounded-xl border border-green-100 bg-green-50 p-3">
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-green-600 shadow-sm">
                             ✓
                           </div>
+
                           <div>
                             <p className="text-sm font-semibold text-green-700">
                               কোনো বাকি নেই
                             </p>
+
                             <p className="mt-1 text-xs text-green-600">
                               এই কাস্টমারের কোনো বাকি নেই
                             </p>

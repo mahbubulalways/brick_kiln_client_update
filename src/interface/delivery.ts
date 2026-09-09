@@ -19,11 +19,10 @@ export type TDeliveryInvoice = {
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
-  serial: number
-  challanDate: string,
-  deliveryDate: string
+  serial: number;
+  challanDate: string;
+  deliveryDate: string;
 };
-
 
 export type TDeliveryResponse = {
   id: number;
@@ -35,17 +34,14 @@ export type TDeliveryResponse = {
   quantity: number;
   deliveryReceived: number;
   deliveryRemaining: number;
-  driver:TDriver,
+  driver: TDriver;
   invoiceId: string;
-  invoice: TDeliveryInvoice;
+  invoice: IChallanForDataShow;
   isDeleted: boolean;
   createdAt: string;
-  deliveryBy:IUser
-  lastDelivered:number
-
+  deliveryBy: IUser;
+  lastDelivered: number;
 };
-
-
 
 export type TDeliveryWithCustomer = {
   id: number;
@@ -63,5 +59,5 @@ export type TDeliveryWithCustomer = {
   invoiceId: number;
   isDeleted: boolean;
   createdAt: string;
-  invoice: IChallanForDataShow
+  invoice: IChallanForDataShow;
 };

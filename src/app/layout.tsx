@@ -31,9 +31,9 @@ export default function RootLayout({
         className={`${anekBangla.className} antialiased no-scrollbar`}
       ><LayoutGuard>
           <Providers>
-            {/* <NetworkStatusProvider> */}
-            {children}
-            {/* </NetworkStatusProvider> */}
+            <NetworkStatusProvider>
+              {children}
+            </NetworkStatusProvider>
             <Toaster />
           </Providers>
         </LayoutGuard>

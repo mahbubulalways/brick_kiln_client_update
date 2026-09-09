@@ -44,18 +44,21 @@ import {
     IChallanForDataShow,
     IChallanItem,
 } from "@/types/types";
+import { TVataInformation } from "@/interface/vata";
 
 interface AllChallanProps {
     customerId: number;
     formatDate: string,
     query: TQuery;
     setInvoiceInfo: Dispatch<SetStateAction<any>>;
+    vataInformation: TVataInformation
 }
 
 const AllChallan = ({
     customerId,
     formatDate,
     query,
+    vataInformation,
     setInvoiceInfo,
 }: AllChallanProps) => {
     const [openPrintModal, setOpenPrintModal] =
@@ -426,6 +429,7 @@ const AllChallan = ({
             {/* ================= Print Modal ================= */}
             {openPrintModal && (
                 <ChalanPrintModal
+                    vataInformation={vataInformation}
                     isOpen={openPrintModal}
                     onClose={() =>
                         setOpenPrintModal(false)

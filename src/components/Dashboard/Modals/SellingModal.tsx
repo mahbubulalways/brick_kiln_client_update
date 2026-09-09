@@ -4,6 +4,7 @@ import CustomReportModal from "@/components/Reusable/CustomReportModal";
 import CustomStatus from "@/components/Reusable/CustomStatus";
 import { useGetItemsWithInvoicesQuery } from "@/redux/features/invoice.features";
 import { IChallanItem } from "@/types/types";
+import { formatDateRange } from "@/utils/formatDateRange";
 import { TbDatabaseOff } from "react-icons/tb";
 
 type TCustomReportModal = {
@@ -19,8 +20,9 @@ const SellingModal = ({
   challanType,
   date
 }: TCustomReportModal) => {
+
   const { isLoading, data, isError } = useGetItemsWithInvoicesQuery(
-    { date, search: challanType },
+    { date: date, search: challanType },
     {
       refetchOnMountOrArgChange: true,
     }

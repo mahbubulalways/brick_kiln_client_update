@@ -639,7 +639,7 @@ const TodaysInVoicePage = ({ limit, page, search }: TQuery) => {
         <SellingModal
           isOpen={openReportModal}
           onClose={() => setOpenReportModal(false)}
-          date={String(filterDate.startDate)}
+          date={formatDate}
           challanType="DAILY"
         />
       )}

@@ -31,6 +31,8 @@ export type TVata = {
         challansPhoneNumber: string;
         subscriptionPlanId: string;
         nextPaymentDate: string;
+        shortDescription: string;
+        additionalAddress: string;
     };
 
     owner: {
@@ -308,6 +310,25 @@ const CreateBrickPage = () => {
                                                 "ঠিকানা সর্বোচ্চ ২৫৫ অক্ষরের হতে পারে",
                                         },
                                     }}
+                                />
+
+                                <CustomInput
+                                    label="অতিরিক্ত ঠিকানা"
+                                    placeholder="অতিরিক্ত ঠিকানা"
+                                    type="text"
+                                    error={errors.vata?.additionalAddress}
+                                    register={register}
+                                    name="vata.additionalAddress"
+
+                                />
+                                <CustomInput
+                                    label="সংক্ষিপ্ত বিবরণ"
+                                    placeholder="সংক্ষিপ্ত বিবরণ"
+                                    type="text"
+                                    error={errors.vata?.shortDescription}
+                                    register={register}
+                                    name="vata.shortDescription"
+
                                 />
 
                                 {/* OWNER NAME */}

@@ -39,6 +39,8 @@ import UnloadReportModal from "@/components/Dashboard/Modals/ReportModal/UnloadR
 import { useGetVataInfoQuery } from "@/redux/features/vata.features";
 import { formatDateRange } from "@/utils/formatDateRange";
 import CustomDateFilter from "@/components/Reusable/CustomDateFilter";
+import TableLazyLoading from "@/components/Dashboard/common/TableLazyLoading";
+import CustomStatus from "@/components/Reusable/CustomStatus";
 
 const UnloadPage = ({ limit, page }: TQuery) => {
 
@@ -160,29 +162,13 @@ const UnloadPage = ({ limit, page }: TQuery) => {
     };
 
     // =========================
-    // LOADING CLASS
-    // =========================
-    if (classLoading) {
-        return (
-            <div className="bg-white p-5 rounded-md">
-                <CustomLoader cls="h-[30vh]" />
-            </div>
-        );
-    }
-    if (classError) {
-        <div className="bg-white p-5 rounded-md">
-            {SERVER_ERROR_MESSAGE}
-        </div>
-    }
 
-    // =========================
-    // TABLE COLSPAN
-    // =========================
+
     const totalColumns =
-        filtered.length + 4;
+        filtered?.length + 4;
 
     return (
-        <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm">
+        <div className="bg-white rounded-md shadow border">
 
             <div className="w-full p-2">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-5">
@@ -238,280 +224,231 @@ const UnloadPage = ({ limit, page }: TQuery) => {
                     </div>
                 </div>
             </div>
-            {/* ================= TABLE ================= */}
-            <div className="overflow-x-auto mt-4">
+            <div >
+                <div className="overflow-x-auto mt-2  ">
+                    <table className="min-w-full border-collapse ">
+                        <thead>
+                            <tr className="bg-[#039A63] text-white text-center">
+                                <TableHead th="তারিখ" />
+                                <TableHead
+                                    th="রাউন্ড"
+                                />
+                                {filtered?.map(
+                                    (
+                                        ft: TClassAndRate
+                                    ) => (
+                                        <TableHead
+                                            key={ft.id}
+                                            th={ft.className}
+                                        />
+                                    )
+                                )}
+                                <TableHead
+                                    th="মোট ইট"
+                                />
+                                <TableHead
+                                    th="বাটন"
+                                />
 
-                <table className="min-w-full text-center border-t">
+                            </tr>
 
-                    {/* ================= THEAD ================= */}
-                    <thead className="bg-[#039A63] text-white">
-
-                        <tr>
-
-                            {/* DATE */}
-                            <TableHead th="তারিখ" />
-
-                            {/* ROUND */}
-                            <TableHead
-                                th="রাউন্ড"
-                                cls="hidden lg:table-cell"
-                            />
-
-                            {/* DYNAMIC CLASS */}
-                            {filtered.map(
+                        </thead>
+                        <tbody>
+                            {isLoading ? (
+                                <TableLazyLoading
+                                    smallColumns={6}
+                                    largeColumns={Number(4 + filtered?.length)}
+                                    rows={6}
+                                />
+                            ) : isError ?
                                 (
-                                    ft: TClassAndRate
-                                ) => (
-                                    <TableHead
-                                        key={ft.id}
-                                        th={ft.className}
-                                    />
+                                    <tr>
+                                        <td colSpan={4 + filtered?.length}>
+                                            <CustomStatus
+                                                type="error"
+                                                description={SERVER_ERROR_MESSAGE}
+                                            />
+                                        </td>
+                                    </tr>
                                 )
-                            )}
 
-                            {/* TOTAL */}
-                            <TableHead
-                                th="মোট ইট"
-                            />
-
-                            {/* BUTTON */}
-                            <TableHead
-                                th="বাটন"
-                            />
-
-                        </tr>
-
-                    </thead>
-
-                    {/* ================= TBODY ================= */}
-                    <tbody>
-
-                        {/* LOADING */}
-                        {isLoading ? (
-
-                            <tr>
-
-                                <td
-                                    colSpan={
-                                        totalColumns
-                                    }
-                                >
-
-                                    <CustomLoader
-                                        cls="h-[30vh]"
-                                    />
-
-                                </td>
-
-                            </tr>
-
-                        ) : isError ? (
-
-                            /* ERROR */
-                            <tr>
-
-                                <td
-                                    colSpan={
-                                        totalColumns
-                                    }
-                                    className="py-8"
-                                >
-                                    {
-                                        SERVER_ERROR_MESSAGE
-                                    }
-                                </td>
-
-                            </tr>
-
-                        ) : !unloads.length ? (
-
-                            /* EMPTY */
-                            <tr>
-
-                                <td
-                                    colSpan={
-                                        totalColumns
-                                    }
-                                    className="py-8 text-gray-600"
-                                >
-                                    {
-                                        data?.message ||
-                                        "কোনো তথ্য পাওয়া যায়নি"
-                                    }
-                                </td>
-
-                            </tr>
-
-                        ) : (
-
-                            /* DATA */
-                            unloads.map(
-                                (row) => {
-
-                                    // =========================
-                                    // TOTAL QUANTITY
-                                    // =========================
-                                    const total =
-                                        row.items?.reduce(
-                                            (
-                                                sum,
-                                                item
-                                            ) =>
-                                                sum +
-                                                Number(
-                                                    item.quantity
-                                                ),
-                                            0
-                                        ) ?? 0;
-
-                                    return (
-
-                                        <tr
-                                            key={row.id}
-                                            className="hover:bg-gray-50"
-                                        >
-
-                                            {/* ================= DATE ================= */}
-                                            <TableData
-                                                td={new Date(
-                                                    row.date
-                                                ).toLocaleDateString(
-                                                    "bn-BD"
-                                                )}
+                                : !unloads?.length ? (
+                                    <tr>
+                                        <td colSpan={4 + filtered?.length}>
+                                            <CustomStatus
+                                                type="empty"
+                                                description="কোনো আনলোড পাওয়া যায়নি"
                                             />
+                                        </td>
+                                    </tr>
+                                ) : (
 
-                                            {/* ================= ROUND ================= */}
-                                            <TableData
-                                                td={toBanglaNumber(
-                                                    row.round?.name ||
-                                                    "-"
-                                                )}
-                                                cls="hidden lg:table-cell"
-                                            />
+                                    unloads.map(
+                                        (row) => {
 
-                                            {/* ================= CLASS COLUMNS ================= */}
+                                            const total =
+                                                row.items?.reduce(
+                                                    (
+                                                        sum,
+                                                        item
+                                                    ) =>
+                                                        sum +
+                                                        Number(
+                                                            item.quantity
+                                                        ),
+                                                    0
+                                                ) ?? 0;
 
-                                            {filtered.map(
-                                                (
-                                                    ft: TClassAndRate
-                                                ) => {
+                                            return (
 
-                                                    /*
-                                                     * এই row-এর unloadItems
-                                                     * থেকে current classId খুঁজে বের করছি
-                                                     */
-                                                    const classData =
-                                                        row.items?.find(
-                                                            (
-                                                                item
-                                                            ) =>
-                                                                item.classId ===
-                                                                ft.id
-                                                        );
+                                                <tr
+                                                    key={row.id}
+                                                    className="hover:bg-gray-50"
+                                                >
 
-                                                    return (
+                                                    {/* ================= DATE ================= */}
+                                                    <TableData
+                                                        td={new Date(
+                                                            row.date
+                                                        ).toLocaleDateString(
+                                                            "bn-BD"
+                                                        )}
+                                                    />
 
-                                                        <TableData
-                                                            key={
-                                                                ft.id
-                                                            }
-                                                            td={toBanglaNumber(
-                                                                Number(
-                                                                    classData?.quantity ??
-                                                                    0
-                                                                )
-                                                            )}
-                                                        />
+                                                    {/* ================= ROUND ================= */}
+                                                    <TableData
+                                                        td={toBanglaNumber(
+                                                            row.round?.name ||
+                                                            "-"
+                                                        )}
+                                                        cls="hidden lg:table-cell"
+                                                    />
 
-                                                    );
-                                                }
-                                            )}
+                                                    {/* ================= CLASS COLUMNS ================= */}
 
-                                            {/* ================= TOTAL ================= */}
-                                            <TableData
-                                                td={toBanglaNumber(
-                                                    total
-                                                )}
-                                            />
+                                                    {filtered.map(
+                                                        (
+                                                            ft: TClassAndRate
+                                                        ) => {
 
-                                            {/* ================= ACTION ================= */}
-                                            <td className="border p-2">
+                                                            /*
+                                                             * এই row-এর unloadItems
+                                                             * থেকে current classId খুঁজে বের করছি
+                                                             */
+                                                            const classData =
+                                                                row.items?.find(
+                                                                    (
+                                                                        item
+                                                                    ) =>
+                                                                        item.classId ===
+                                                                        ft.id
+                                                                );
 
-                                                <DropdownMenu>
+                                                            return (
 
-                                                    <DropdownMenuTrigger
-                                                        asChild
-                                                    >
+                                                                <TableData
+                                                                    key={
+                                                                        ft.id
+                                                                    }
+                                                                    td={toBanglaNumber(
+                                                                        Number(
+                                                                            classData?.quantity ??
+                                                                            0
+                                                                        )
+                                                                    )}
+                                                                />
 
-                                                        <button
-                                                            className="
+                                                            );
+                                                        }
+                                                    )}
+
+                                                    {/* ================= TOTAL ================= */}
+                                                    <TableData
+                                                        td={toBanglaNumber(
+                                                            total
+                                                        )}
+                                                    />
+
+                                                    {/* ================= ACTION ================= */}
+                                                    <td className="border p-2">
+
+                                                        <DropdownMenu>
+
+                                                            <DropdownMenuTrigger
+                                                                asChild
+                                                            >
+
+                                                                <button
+                                                                    className="
                                                                 p-1.5
                                                                 rounded
                                                                 hover:bg-gray-100
                                                                 transition
                                                             "
-                                                        >
+                                                                >
 
-                                                            <MoreVertical
-                                                                className="
+                                                                    <MoreVertical
+                                                                        className="
                                                                     w-4
                                                                     h-4
                                                                     text-gray-600
                                                                     cursor-pointer
                                                                 "
-                                                            />
+                                                                    />
 
-                                                        </button>
+                                                                </button>
 
-                                                    </DropdownMenuTrigger>
+                                                            </DropdownMenuTrigger>
 
-                                                    <DropdownMenuContent
-                                                        align="end"
-                                                        className="
+                                                            <DropdownMenuContent
+                                                                align="end"
+                                                                className="
                                                             rounded-md
                                                             border
                                                             bg-white
                                                             shadow-md
                                                         "
-                                                    >
+                                                            >
 
-                                                        {/* DELETE */}
-                                                        <DropdownMenuItem
-                                                            onClick={() =>
-                                                                handleDelete(
-                                                                    row.id
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                deleteLoading
-                                                            }
-                                                        >
+                                                                {/* DELETE */}
+                                                                <DropdownMenuItem
+                                                                    onClick={() =>
+                                                                        handleDelete(
+                                                                            row.id
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        deleteLoading
+                                                                    }
+                                                                >
 
-                                                            <CustomDropDownMenuItem
-                                                                Icon={
-                                                                    Trash
-                                                                }
-                                                                title="ডিলেট"
-                                                            />
+                                                                    <CustomDropDownMenuItem
+                                                                        Icon={
+                                                                            Trash
+                                                                        }
+                                                                        title="ডিলেট"
+                                                                    />
 
-                                                        </DropdownMenuItem>
+                                                                </DropdownMenuItem>
 
-                                                    </DropdownMenuContent>
+                                                            </DropdownMenuContent>
 
-                                                </DropdownMenu>
+                                                        </DropdownMenu>
 
-                                            </td>
+                                                    </td>
 
-                                        </tr>
+                                                </tr>
 
-                                    );
-                                }
-                            )
+                                            );
+                                        }
+                                    )
 
-                        )}
+                                )}
 
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+
+                </div>
                 <TablePagination
                     page={meta?.page ?? 1}
                     totalPages={meta?.totalPages ?? 1}
